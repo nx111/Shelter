@@ -1,5 +1,8 @@
 package net.typeblog.shelter.ui;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -46,6 +49,8 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             view.setOnClickListener((v) -> onClick());
             if (mAllowMultiSelect) {
                 view.setOnLongClickListener((v) -> onLongClick());
+            } else {
+                view.setOnLongClickListener((v) -> onLongClick());
             }
         }
 
@@ -53,12 +58,12 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             if (mIndex == -1) return;
 
             if (!mMultiSelectMode) {
-                // Show available operations via the Fragment
-                // pass the full info to it, since we can't be sure
-                // the index won't change
-                if (mContextMenuHandler != null) {
-                    mContextMenuHandler.showContextMenu(mList.get(mIndex), mView);
-                }
+                Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
+                intent.setComponent(new ComponentName(mView.getContext(), DummyActivity.class));
+                intent.putExtra("packageName", mList.get(mIndex).getPackageName());
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                DummyActivity.registerSameProcessRequest(intent);
+                mView.getContext().startActivity(intent);
             } else {
                 // In multi-select mode, single clicks just adds to the selection
                 // or cancels the selection if already selected
@@ -73,16 +78,14 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         boolean onLongClick() {
             if (mIndex == -1) return false;
 
-            // If we have an action mode handler, we notify it to enter
-            // action mode on long click, and register this adapter
-            // to be in multi-select mode
-            if (!mMultiSelectMode && mActionModeHandler != null && mActionModeHandler.createActionMode()) {
-                mMultiSelectMode = true;
-                select();
-                return true;
+            if (!mMultiSelectMode) {
+                if (mContextMenuHandler != null) {
+                     mContextMenuHandler.showContextMenu(mList.get(mIndex), mView);
+                }
             } else {
                 return false;
             }
+            return true;
         }
 
         // When the user selects the item
