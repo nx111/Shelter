@@ -21,10 +21,6 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/main_menu_create_freeze_all_shortcut"
-        android:title="@string/create_freeze_all_shortcut" />
-
-    <item
         android:id="@+id/main_menu_install_app_to_profile"
         android:title="@string/install_app_to_profile" />
 

@@ -377,14 +377,6 @@ public class MainActivity extends AppCompatActivity {
                 settingsIntent.putExtra("extras", extras);
                 startActivity(settingsIntent);
                 return true;
-            case R.id.main_menu_create_freeze_all_shortcut:
-                Intent launchIntent = new Intent(DummyActivity.PUBLIC_FREEZE_ALL);
-                launchIntent.setComponent(new ComponentName(this, DummyActivity.class));
-                launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                Utility.createLauncherShortcut(this, launchIntent,
-                        Icon.createWithResource(this, R.mipmap.ic_freeze),
-                        "shelter-freeze-all", getString(R.string.freeze_all_shortcut));
-                return true;
             case R.id.main_menu_install_app_to_profile:
                 Intent openApkIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 openApkIntent.addCategory(Intent.CATEGORY_OPENABLE);
