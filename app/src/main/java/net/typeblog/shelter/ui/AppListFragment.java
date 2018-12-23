@@ -167,13 +167,17 @@ public class AppListFragment extends BaseFragment {
             // Allow multi-select actions if this is in the work profile
             // to allow things like multi-app unfreeze shortcuts
             mAdapter.allowMultiSelect();
+            mAdapter.isRemote = true;
             mAdapter.setActionModeHandler(this::createMultiSelectActionMode);
             mAdapter.setActionModeCancelHandler(() -> {
                 if (mActionMode != null) {
                     mActionMode.finish();
                 }
             });
+        } else {
+           mAdapter.isRemote = false;
         }
+
         mList.setAdapter(mAdapter);
         mList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mList.setHasFixedSize(true);

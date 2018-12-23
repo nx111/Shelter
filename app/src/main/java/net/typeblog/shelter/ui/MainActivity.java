@@ -228,7 +228,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 curTabPos = tab.getPosition();
-                mPager.setCurrentItem(tab.getPosition());
             }
 
             @Override

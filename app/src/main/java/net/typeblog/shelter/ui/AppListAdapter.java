@@ -58,12 +58,18 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             if (mIndex == -1) return;
 
             if (!mMultiSelectMode) {
-                Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
-                intent.setComponent(new ComponentName(mView.getContext(), DummyActivity.class));
-                intent.putExtra("packageName", mList.get(mIndex).getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                DummyActivity.registerSameProcessRequest(intent);
-                mView.getContext().startActivity(intent);
+                if(isRemote) {
+                    Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
+                    intent.setComponent(new ComponentName(mView.getContext(), DummyActivity.class));
+                    intent.putExtra("packageName", mList.get(mIndex).getPackageName());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    DummyActivity.registerSameProcessRequest(intent);
+                    mView.getContext().startActivity(intent);
+                } else {
+                    if (mContextMenuHandler != null) {
+                         mContextMenuHandler.showContextMenu(mList.get(mIndex), mView);
+                    }
+                }
             } else {
                 // In multi-select mode, single clicks just adds to the selection
                 // or cancels the selection if already selected
@@ -243,6 +249,8 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
     private boolean mAllowMultiSelect = false;
     private boolean mMultiSelectMode = false;
     private List<Integer> mSelectedIndices = new ArrayList<>();
+
+    public boolean isRemote = true;
 
     AppListAdapter(IShelterService service, Drawable defaultIcon) {
         mService = service;
