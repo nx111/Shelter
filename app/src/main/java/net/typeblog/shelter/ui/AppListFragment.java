@@ -310,6 +310,7 @@ public class AppListFragment extends BaseFragment {
                             LocalStorageManager.PREF_AUTO_FREEZE_LIST_WORK_PROFILE, mSelectedApp.getPackageName()));
             menu.add(Menu.NONE, MENU_ITEM_CREATE_UNFREEZE_SHORTCUT, Menu.NONE, R.string.create_unfreeze_shortcut);
         } else {
+            menu.add(Menu.NONE, MENU_ITEM_LAUNCH, Menu.NONE, R.string.launch);
             menu.add(Menu.NONE, MENU_ITEM_CLONE, Menu.NONE, R.string.clone_to_work_profile);
         }
 
@@ -375,12 +376,18 @@ public class AppListFragment extends BaseFragment {
                 // LAUNCH and UNFREEZE_AND_LAUNCH share the same ID
                 // because the implementation of UNFREEZE_AND_LAUNCH in DummyActivity
                 // will work for both
-                Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
-                intent.setComponent(new ComponentName(getContext(), DummyActivity.class));
-                intent.putExtra("packageName", mSelectedApp.getPackageName());
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                DummyActivity.registerSameProcessRequest(intent);
-                startActivity(intent);
+                if (mIsRemote) {
+                    Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
+                    intent.setComponent(new ComponentName(getContext(), DummyActivity.class));
+                    intent.putExtra("packageName", mSelectedApp.getPackageName());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    DummyActivity.registerSameProcessRequest(intent);
+                    startActivity(intent);
+                } else {
+                    Intent intent = getContext().getPackageManager().getLaunchIntentForPackage(
+                        mSelectedApp.getPackageName());
+                    startActivity(intent);
+                }
                 return true;
             case MENU_ITEM_CREATE_UNFREEZE_SHORTCUT:
                 loadIconAndAddUnfreezeShortcut(mSelectedApp, null);

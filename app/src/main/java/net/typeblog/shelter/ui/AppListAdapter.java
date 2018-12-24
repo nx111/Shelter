@@ -47,11 +47,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             mPackage = view.findViewById(R.id.list_app_package);
             mSelectOrder = view.findViewById(R.id.list_app_select_order);
             view.setOnClickListener((v) -> onClick());
-            if (mAllowMultiSelect) {
-                view.setOnLongClickListener((v) -> onLongClick());
-            } else {
-                view.setOnLongClickListener((v) -> onLongClick());
-            }
+            view.setOnLongClickListener((v) -> onLongClick());
         }
 
         void onClick() {
@@ -59,16 +55,15 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
 
             if (!mMultiSelectMode) {
                 if(isRemote) {
+                    Context mContext = mView.getContext();
                     Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
-                    intent.setComponent(new ComponentName(mView.getContext(), DummyActivity.class));
+                    intent.setComponent(new ComponentName(mContext, DummyActivity.class));
                     intent.putExtra("packageName", mList.get(mIndex).getPackageName());
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     DummyActivity.registerSameProcessRequest(intent);
-                    mView.getContext().startActivity(intent);
+                    mContext.startActivity(intent);
                 } else {
-                    if (mContextMenuHandler != null) {
-                         mContextMenuHandler.showContextMenu(mList.get(mIndex), mView);
-                    }
+                    onLongClick();
                 }
             } else {
                 // In multi-select mode, single clicks just adds to the selection
