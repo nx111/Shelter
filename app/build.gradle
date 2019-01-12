@@ -1,5 +1,10 @@
 apply plugin: 'com.android.application'
 
+def dateString() {
+    def cmd = 'date +%Y%m%d'
+    cmd.execute().text.trim().toInteger()
+}
+
 android {
     compileSdkVersion 28
     buildToolsVersion '28.0.3'
@@ -7,10 +12,12 @@ android {
         applicationId "net.typeblog.shelter"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 10
-        versionName "1.4-alpha"
+        versionCode 12
+        versionName "1.4-nx111"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
+
     buildTypes {
         release {
             minifyEnabled false
@@ -30,6 +37,14 @@ android {
         disable 'MissingTranslation'
         // We don't need Google App Indexing
         disable 'GoogleAppIndexingWarning'
+    }
+
+    android {
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                output.versionCodeOverride = dateString()
+            }
+        }
     }
 }
 

@@ -169,4 +169,16 @@ if [ "$(uname)" = "Darwin" ] && [ "$HOME" = "$PWD" ]; then
   cd "$(dirname "$0")"
 fi
 
-exec "$JAVACMD" "$@"
+eval "$JAVACMD" "$@"
+
+ret=$?
+[ $ret -ne 0 ] && exit $ret
+if ! echo "$@" | grep -q  "build" ; then
+   exit  $ret
+fi
+if [ -f app/build/outputs/apk/release/app-release-unsigned.apk -a -f sign-tools/signapk.jar -a -f sign-tools/x509.pem -a -f sign-tools/key.pk8 ]; then
+    versionCode=$(date +%Y%m%d)
+    versionName=$(grep "[[:space:]]*versionName[[:space:]]*\".*\"" app/build.gradle  | sed -e "s/^[[:space:]]*versionName[[:space:]]*//g" | sed -e "s/\"//g")
+    apkname=$(basename $(pwd))
+    java -jar sign-tools/signapk.jar sign-tools/x509.pem sign-tools/key.pk8 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/${apkname}-${versionName}_${versionCode}-signed.apk
+fi
