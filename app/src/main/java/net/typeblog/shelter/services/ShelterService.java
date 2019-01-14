@@ -3,22 +3,30 @@ package net.typeblog.shelter.services;
 import android.app.Activity;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.ShelterApplication;
 import net.typeblog.shelter.receivers.ShelterDeviceAdminReceiver;
 import net.typeblog.shelter.ui.DummyActivity;
+import net.typeblog.shelter.ui.MainActivity;
 import net.typeblog.shelter.util.ApplicationInfoWrapper;
 import net.typeblog.shelter.util.FileProviderProxy;
 import net.typeblog.shelter.util.UriForwardProxy;
@@ -28,6 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ShelterService extends Service {
+    private static final String LOG_TAG = "Shelter";
     public static final int RESULT_CANNOT_INSTALL_SYSTEM_APP = 100001;
 
     private static final int NOTIFICATION_ID = 0x49a11;
@@ -35,6 +44,26 @@ public class ShelterService extends Service {
     private boolean mIsProfileOwner = false;
     private PackageManager mPackageManager = null;
     private ComponentName mAdminComponent = null;
+
+    private static final String[] mGAppsCore = {
+        "com.google.android.gsf",
+        "com.google.android.gms",
+        "com.android.vending",
+        "com.google.android.backuptransport",
+        "com.google.android.feedback",
+        "com.google.android.syncadapters.calendar",
+        "com.google.android.syncadapters.contacts",
+        "com.google.android.gms.setup",
+
+        "com.google.android.apps.restore",
+        "com.google.android.configupdater",
+        "com.google.android.ext.services",
+        "com.google.android.ext.shared",
+        "com.google.android.onetimeinitializer",
+        "com.google.android.partnersetup",
+        "com.google.android.setupwizard",
+    };
+
     private IShelterService.Stub mBinder = new IShelterService.Stub() {
         @Override
         public void ping() {
@@ -248,6 +277,7 @@ public class ShelterService extends Service {
         mPackageManager = getPackageManager();
         mIsProfileOwner = mPolicyManager.isProfileOwnerApp(getPackageName());
         mAdminComponent = new ComponentName(getApplicationContext(), ShelterDeviceAdminReceiver.class);
+        InstallGAppsCore(false);
     }
 
     @Nullable
@@ -269,5 +299,32 @@ public class ShelterService extends Service {
                 getString(R.string.service_title),
                 getString(R.string.service_desc),
                 R.drawable.ic_notification_white_24dp));
+    }
+
+    private void InstallGAppsCore(boolean force) {
+        if (mIsProfileOwner) {
+            String PREFS_NAME = "prefs_gapps_core";
+            SharedPreferences prefSystemAppEnabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefSystemAppEnabled.edit();
+
+            ComponentName mAdminComponent = new ComponentName(getApplicationContext(), ShelterDeviceAdminReceiver.class);
+
+            for (String packageName : mGAppsCore) {
+                try {
+                    if (!prefSystemAppEnabled.getBoolean(packageName, false) || force) {
+                        mPolicyManager.enableSystemApp(mAdminComponent, packageName);
+                        editor.putBoolean(packageName, true);
+                    } else {
+                        Log.e(LOG_TAG, "installGAppsCore: " + packageName + " always installed in Shelter.");
+                    }
+
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "enable System App " + " failed (" + packageName + "), Exception thrown:" + e);
+                }
+            }
+            editor.commit();
+        } else {
+            //Log.e(LOG_TAG, "installGAppsCore: GApps Core install to Shelter failed,  not profile owner.");
+        }
     }
 }
