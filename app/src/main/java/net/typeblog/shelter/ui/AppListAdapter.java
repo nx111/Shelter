@@ -54,8 +54,9 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             if (mIndex == -1) return;
 
             if (!mMultiSelectMode) {
-                if(isRemote) {
-                    Context mContext = mView.getContext();
+                Context mContext = mView.getContext();
+                boolean canLaunch = ApplicationInfoWrapper.canLaunch(mContext, mList.get(mIndex).getPackageName(), isRemote);
+                if (isRemote && canLaunch) {
                     Intent intent = new Intent(DummyActivity.UNFREEZE_AND_LAUNCH);
                     intent.setComponent(new ComponentName(mContext, DummyActivity.class));
                     intent.putExtra("packageName", mList.get(mIndex).getPackageName());

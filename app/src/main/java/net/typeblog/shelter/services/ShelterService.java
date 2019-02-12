@@ -100,9 +100,8 @@ public class ShelterService extends Service {
                             boolean isSystem = (it.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
                             boolean isHidden = isHidden(it.packageName);
                             boolean isInstalled = (it.flags & ApplicationInfo.FLAG_INSTALLED) != 0;
-                            boolean canLaunch = mPackageManager.getLaunchIntentForPackage(it.packageName) != null;
-
-                            return showAll || (!isSystem && isInstalled) || isHidden || canLaunch;
+                            boolean canLaunch = ApplicationInfoWrapper.canLaunch(getApplicationContext(), it.packageName, mIsProfileOwner);
+                            return showAll || (!isSystem && isInstalled) || (!isSystem && isHidden) || canLaunch;
                         })
                         .map(ApplicationInfoWrapper::new)
                         .map((it) -> it.loadLabel(mPackageManager)

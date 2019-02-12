@@ -1,9 +1,20 @@
 package net.typeblog.shelter.util;
 
+import android.app.admin.DevicePolicyManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.LauncherApps;
+import android.content.pm.LauncherActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.UserHandle;
+import android.os.UserManager;
+import android.util.Log;
+
+import java.util.List;
 
 public class ApplicationInfoWrapper implements Parcelable {
     public static final Parcelable.Creator<ApplicationInfoWrapper> CREATOR = new Parcelable.Creator<ApplicationInfoWrapper>() {
@@ -22,9 +33,12 @@ public class ApplicationInfoWrapper implements Parcelable {
         }
     };
 
+    private final static String LOG_TAG = "Shelter";
     private ApplicationInfo mInfo = null;
     private String mLabel = null;
     private boolean mIsHidden = false;
+    // PackageManager.MATCH_ANY_USER marked as SystemApi, so redefend it here.
+    private static final int MATCH_ANY_USER = 0x00400000;
 
     private ApplicationInfoWrapper() {}
 
@@ -35,6 +49,29 @@ public class ApplicationInfoWrapper implements Parcelable {
     public ApplicationInfoWrapper loadLabel(PackageManager pm) {
         mLabel = pm.getApplicationLabel(mInfo).toString();
         return this;
+    }
+
+    public static boolean canLaunch(Context context, String packageName, boolean isProfileOwner) {
+        UserManager userManager = (UserManager)context.getSystemService(Context.USER_SERVICE);
+        LauncherApps launcherApps = (LauncherApps)context.getSystemService(Context.LAUNCHER_APPS_SERVICE);
+        List<UserHandle> profiles = userManager.getUserProfiles();
+        UserHandle curUserHandle = null;
+
+        for (UserHandle profile:profiles) {
+            if (!isProfileOwner && 0 == profile.hashCode()) {
+                curUserHandle = profile;
+                break;
+            } else if (isProfileOwner && 0 != profile.hashCode()){
+                curUserHandle = profile;
+                break;
+            }
+        }
+
+        if (launcherApps.getActivityList(packageName, curUserHandle).isEmpty()) {
+            return false;
+        }
+
+        return true;
     }
 
     // Only used from ShelterService
