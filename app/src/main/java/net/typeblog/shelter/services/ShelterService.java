@@ -1,16 +1,20 @@
 package net.typeblog.shelter.services;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
+import android.content.SyncAdapterType;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +22,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
+
 
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -245,6 +250,42 @@ public class ShelterService extends Service {
             mPolicyManager.setApplicationHidden(
                     mAdminComponent,
                     app.getPackageName(), false);
+        }
+
+        @Override
+        public void setSyncAutomatilly() {
+            if (!mIsProfileOwner) {
+                //Log.d(LOG_TAG, "Please set sync automatilly by Settings -> Account on local system");
+                return;
+            }
+            boolean masterSyncAutomatically = ContentResolver.getMasterSyncAutomatically();
+            if (!masterSyncAutomatically) {
+                ContentResolver.setMasterSyncAutomatically(true);
+                masterSyncAutomatically = ContentResolver.getMasterSyncAutomatically();
+            }
+            if (!masterSyncAutomatically) {
+                Log.d(LOG_TAG, "setMasterSyncAutomatically failed!");
+                return;
+            }
+
+            SyncAdapterType[] types = ContentResolver.getSyncAdapterTypes();
+            AccountManager accmgr = AccountManager.get(getApplicationContext());
+            for (SyncAdapterType type : types) {
+                Account[] accounts = accmgr.getAccountsByType(type.accountType);
+                for (Account account : accounts) {
+                    ContentResolver.setIsSyncable(account, type.authority,  1);
+                    ContentResolver.setSyncAutomatically(account, type.authority, true);
+                    boolean enabled = ContentResolver.getSyncAutomatically(account, type.authority);
+                    if (!enabled) {
+                        Log.d(LOG_TAG, "account: " + account.name + " not set to sync automatically.");
+                    }
+                    if (enabled) {
+                        Log.d(LOG_TAG, "synching account: " + account.name);
+                        // trigger update for next account
+                        ContentResolver.requestSync(account, type.authority, new Bundle());
+                    }
+                }
+       		}
         }
 
         @Override

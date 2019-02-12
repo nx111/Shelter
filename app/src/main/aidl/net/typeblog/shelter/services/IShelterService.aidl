@@ -21,6 +21,7 @@ interface IShelterService {
     void uninstallApp(in ApplicationInfoWrapper app, IAppInstallCallback callback);
     void freezeApp(in ApplicationInfoWrapper app);
     void unfreezeApp(in ApplicationInfoWrapper app);
+    void setSyncAutomatilly();
     boolean hasUsageStatsPermission();
     List<String> getCrossProfileWidgetProviders();
     boolean setCrossProfileWidgetProviderEnabled(String pkgName, boolean enabled);

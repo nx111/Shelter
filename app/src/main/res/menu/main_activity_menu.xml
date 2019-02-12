@@ -25,6 +25,10 @@
         android:title="@string/install_app_to_profile" />
 
     <item
+        android:id="@+id/main_menu_set_sync_automatically"
+        android:title="@string/set_sync_automatically" />
+
+    <item
         android:id="@+id/main_menu_show_all"
         android:title="@string/show_all"
         android:checkable="true"

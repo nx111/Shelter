@@ -43,6 +43,7 @@ import net.typeblog.shelter.util.Utility;
 public class MainActivity extends AppCompatActivity {
     public static final String BROADCAST_CONTEXT_MENU_CLOSED = "net.typeblog.shelter.broadcast.CONTEXT_MENU_CLOSED";
     public static final String BROADCAST_SEARCH_FILTER_CHANGED = "net.typeblog.shelter.broadcast.SEARCH_FILTER_CHANGED";
+    public static final String BROADCAST_SET_SYNC_AUTOMATICALLY = "net.typeblog.shelter.broadcast.SET_SYNC_AUTOMATICALLY";
 
     private static final String LOG_TAG = "Shelter";
 
@@ -407,6 +408,11 @@ public class MainActivity extends AppCompatActivity {
                 openApkIntent.addCategory(Intent.CATEGORY_OPENABLE);
                 openApkIntent.setType("application/vnd.android.package-archive");
                 startActivityForResult(openApkIntent, REQUEST_DOCUMENTS_CHOOSE_APK);
+                return true;
+            case R.id.main_menu_set_sync_automatically:
+                Intent syncIntent = new Intent(BROADCAST_SET_SYNC_AUTOMATICALLY);
+                LocalBroadcastManager.getInstance(MainActivity.this)
+                        .sendBroadcast(syncIntent);
                 return true;
             case R.id.main_menu_show_all:
                 Runnable update = () -> {

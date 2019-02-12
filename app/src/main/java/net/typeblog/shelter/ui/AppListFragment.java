@@ -106,6 +106,17 @@ public class AppListFragment extends BaseFragment {
         }
     };
 
+
+    // Receiver for set sync automatically event
+    private BroadcastReceiver mSetSyncReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                mService.setSyncAutomatilly();
+            } catch (RemoteException e) { }
+        }
+    };
+
     static AppListFragment newInstance(IShelterService service, boolean isRemote) {
         AppListFragment fragment = new AppListFragment();
         Bundle args = new Bundle();
@@ -142,6 +153,11 @@ public class AppListFragment extends BaseFragment {
         } catch (Exception e) {
                 refresh();
         }
+
+        LocalBroadcastManager.getInstance(getContext())
+                .registerReceiver(mSetSyncReceiver,
+                        new IntentFilter(MainActivity.BROADCAST_SET_SYNC_AUTOMATICALLY));
+
     }
 
     @Override
@@ -154,6 +170,8 @@ public class AppListFragment extends BaseFragment {
                 .unregisterReceiver(mContextMenuClosedReceiver);
         LocalBroadcastManager.getInstance(getContext())
                 .unregisterReceiver(mSearchReceiver);
+        LocalBroadcastManager.getInstance(getContext())
+                .unregisterReceiver(mSetSyncReceiver);
     }
 
     @Nullable
