@@ -1,7 +1,10 @@
 package net.typeblog.shelter.util;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -25,6 +28,8 @@ public class ApplicationInfoWrapper implements Parcelable {
     private ApplicationInfo mInfo = null;
     private String mLabel = null;
     private boolean mIsHidden = false;
+    // PackageManager.MATCH_ANY_USER marked as SystemApi, so redefend it here.
+    private static final int MATCH_ANY_USER = 0x00400000;
 
     private ApplicationInfoWrapper() {}
 
@@ -35,6 +40,42 @@ public class ApplicationInfoWrapper implements Parcelable {
     public ApplicationInfoWrapper loadLabel(PackageManager pm) {
         mLabel = pm.getApplicationLabel(mInfo).toString();
         return this;
+    }
+
+    public static boolean canLaunch(Context context, String packageName) {
+        final int PER_USER_RANGE = 100000;
+        ResolveInfo ri;
+
+        ApplicationInfoWrapper info = null;
+        PackageManager pm = context.getPackageManager();
+        String myPackageName = context.getPackageName();
+
+        try {
+            int myUserId = pm.getApplicationInfo(myPackageName,0).uid / PER_USER_RANGE;
+            info = new ApplicationInfoWrapper(pm.getApplicationInfo(packageName, 0));
+            if (info == null || (info.getInfo().uid / PER_USER_RANGE) != myUserId) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        Intent intentToResolve = new Intent(Intent.ACTION_MAIN);
+        intentToResolve.addCategory(Intent.CATEGORY_LAUNCHER);
+        intentToResolve.setPackage(packageName);
+        ri = pm.resolveActivity(intentToResolve, PackageManager.MATCH_DISABLED_COMPONENTS | MATCH_ANY_USER);
+        if (ri == null) {
+            intentToResolve.removeCategory(Intent.CATEGORY_LAUNCHER);
+            intentToResolve.addCategory(Intent.CATEGORY_INFO);
+            intentToResolve.setPackage(packageName);
+            ri = pm.resolveActivity(intentToResolve, PackageManager.MATCH_DISABLED_COMPONENTS | MATCH_ANY_USER);
+        }
+
+        if (ri == null) {
+            return false;
+        }
+
+        return true;
     }
 
     // Only used from ShelterService
