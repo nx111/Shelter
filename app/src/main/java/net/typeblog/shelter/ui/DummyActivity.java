@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.ShelterApplication;
@@ -339,6 +340,9 @@ public class DummyActivity extends Activity {
             return;
         }
 
+        boolean needRefresh = false;
+        ComponentName componentAdmin = new ComponentName(this, ShelterDeviceAdminReceiver.class);
+
         // If we have multiple linked apps to unfreeze before launching the main one
         if (getIntent().hasExtra("linkedPackages")) {
             String[] packages = getIntent().getStringArrayExtra("linkedPackages");
@@ -346,18 +350,20 @@ public class DummyActivity extends Activity {
 
             for (int i = 0; i < packages.length; i++) {
                 // Unfreeze everything
-                mPolicyManager.setApplicationHidden(
-                        new ComponentName(this, ShelterDeviceAdminReceiver.class),
-                        packages[i], false);
+                boolean isHidden = mPolicyManager.isApplicationHidden(componentAdmin,packages[i]);
+
+                mPolicyManager.setApplicationHidden(componentAdmin, packages[i], false);
                 // Register freeze service
-                if (packagesShouldFreeze[i]) {
+                if (packagesShouldFreeze[i] != isHidden) {
                     registerAppToFreeze(packages[i]);
+                    needRefresh = true;
                 }
             }
         }
 
         // Here is the main package to launch
         String packageName = getIntent().getStringExtra("packageName");
+        boolean isHidden = mPolicyManager.isApplicationHidden(componentAdmin, packageName);
 
         // Unfreeze the app first
         mPolicyManager.setApplicationHidden(
@@ -368,10 +374,21 @@ public class DummyActivity extends Activity {
         Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageName);
 
         if (launchIntent != null) {
-            if (getIntent().getBooleanExtra("shouldFreeze", false)) {
+            boolean shouldFreeze = getIntent().getBooleanExtra("shouldFreeze", false);
+            if (shouldFreeze) {
                 registerAppToFreeze(packageName);
             }
+            if (isHidden != shouldFreeze){
+                needRefresh = true;
+            }
             startActivity(launchIntent);
+        } else if (isHidden) {
+            needRefresh = true;
+        }
+
+        if (needRefresh) {
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(new Intent(AppListFragment.BROADCAST_REFRESH));
         }
 
         finish();
@@ -380,6 +397,9 @@ public class DummyActivity extends Activity {
     private void registerAppToFreeze(String packageName) {
         FreezeService.registerAppToFreeze(packageName);
         startService(new Intent(this, FreezeService.class));
+        LocalBroadcastManager.getInstance(this)
+            .sendBroadcast(new Intent(AppListFragment.BROADCAST_REFRESH));
+
     }
 
     private void actionPublicFreezeAll() {
@@ -409,6 +429,8 @@ public class DummyActivity extends Activity {
             }
             stopService(new Intent(this, FreezeService.class)); // Stop the auto-freeze service
             Toast.makeText(this, R.string.freeze_all_success, Toast.LENGTH_SHORT).show();
+            LocalBroadcastManager.getInstance(this)
+                            .sendBroadcast(new Intent(AppListFragment.BROADCAST_REFRESH));
             finish();
         } else {
             finish();
