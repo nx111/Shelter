@@ -135,7 +135,13 @@ public class AppListFragment extends BaseFragment {
         LocalBroadcastManager.getInstance(getContext())
                 .registerReceiver(mSearchReceiver,
                         new IntentFilter(MainActivity.BROADCAST_SEARCH_FILTER_CHANGED));
-        refresh();
+        try {
+            if (mService.getPackagesRefreshed()) {
+                refresh();
+            }
+        } catch (Exception e) {
+                refresh();
+        }
     }
 
     @Override
@@ -222,6 +228,9 @@ public class AppListFragment extends BaseFragment {
                         mSwipeRefresh.setRefreshing(false);
                         mAdapter.setData(apps);
                         mRefreshing = false;
+                        try {
+                            mService.setPackagesRefreshed(false);
+                        } catch (Exception e) {};
                     });
                 }
             }, ((MainActivity) getActivity()).mShowAll);

@@ -119,7 +119,15 @@
         <!-- Actions like cloning / freezing apps will be performed by this service -->
         <service android:name=".services.ShelterService"
                 android:exported="true"
-                android:permission="android.permission.BIND_DEVICE_ADMIN"/>
+                android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_INSTALL" />
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_CHANGED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <data android:scheme="package"></data>
+            </intent-filter>
+        </service>
 
         <!-- Service to forward file information between profiles -->
         <service android:name=".services.FileShuttleService"

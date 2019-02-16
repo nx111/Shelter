@@ -13,6 +13,8 @@ interface IShelterService {
     void ping();
     void stopShelterService(boolean kill);
     void getApps(IGetAppsCallback callback, boolean showAll);
+    boolean getPackagesRefreshed();
+    void setPackagesRefreshed(boolean value);
     void loadIcon(in ApplicationInfoWrapper info, ILoadIconCallback callback);
     void installApp(in ApplicationInfoWrapper app, IAppInstallCallback callback);
     void installApk(in UriForwardProxy uri, IAppInstallCallback callback);

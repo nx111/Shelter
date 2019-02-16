@@ -44,6 +44,7 @@ public class ShelterService extends Service {
     private boolean mIsProfileOwner = false;
     private PackageManager mPackageManager = null;
     private ComponentName mAdminComponent = null;
+    private boolean mPackagesRefreshed = true;
 
     private static final String[] mGAppsCore = {
         "com.google.android.gsf",
@@ -268,6 +269,31 @@ public class ShelterService extends Service {
                 return mPolicyManager.removeCrossProfileWidgetProvider(mAdminComponent, pkgName);
             }
         }
+
+       @Override
+       public boolean getPackagesRefreshed() {
+           return mPackagesRefreshed;
+       }
+
+       @Override
+       public void setPackagesRefreshed(boolean value) {
+           mPackagesRefreshed = value;
+       }
+    };
+
+    // Receiver for packages add/change/remove events
+    // used for app changes
+    private BroadcastReceiver mPackageInstallReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(Intent.ACTION_PACKAGE_INSTALL)
+                    || action.equals(Intent.ACTION_PACKAGE_ADDED)
+                    || action.equals(Intent.ACTION_PACKAGE_CHANGED)
+                    || action.equals(Intent.ACTION_PACKAGE_REMOVED)) {
+                mPackagesRefreshed = true;
+            };
+        }
     };
 
     @Override
@@ -276,7 +302,22 @@ public class ShelterService extends Service {
         mPackageManager = getPackageManager();
         mIsProfileOwner = mPolicyManager.isProfileOwnerApp(getPackageName());
         mAdminComponent = new ComponentName(getApplicationContext(), ShelterDeviceAdminReceiver.class);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_INSTALL);
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addDataScheme("package");
+        registerReceiver(mPackageInstallReceiver, filter);
+
         InstallGAppsCore(false);
+    }
+
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(mPackageInstallReceiver);
+        super.onDestroy();
     }
 
     @Nullable
