@@ -354,8 +354,8 @@ public class ShelterService extends Service {
                     if (!prefSystemAppEnabled.getBoolean(packageName, false) || force) {
                         mPolicyManager.enableSystemApp(mAdminComponent, packageName);
                         editor.putBoolean(packageName, true);
-                    } else {
-                        Log.e(LOG_TAG, "installGAppsCore: " + packageName + " always installed in Shelter.");
+                    } else if (Log.isLoggable(LOG_TAG, Log.VERBOSE)){
+                        Log.v(LOG_TAG, "installGAppsCore: " + packageName + " always installed in Shelter.");
                     }
 
                 } catch (Exception e) {
@@ -363,8 +363,8 @@ public class ShelterService extends Service {
                 }
             }
             editor.commit();
-        } else {
-            //Log.e(LOG_TAG, "installGAppsCore: GApps Core install to Shelter failed,  not profile owner.");
+        } else if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+            Log.v(LOG_TAG, "installGAppsCore: GApps Core install to Shelter failed,  not profile owner.");
         }
     }
 }

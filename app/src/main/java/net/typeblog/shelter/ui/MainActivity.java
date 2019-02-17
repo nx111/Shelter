@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -42,6 +43,8 @@ import net.typeblog.shelter.util.Utility;
 public class MainActivity extends AppCompatActivity {
     public static final String BROADCAST_CONTEXT_MENU_CLOSED = "net.typeblog.shelter.broadcast.CONTEXT_MENU_CLOSED";
     public static final String BROADCAST_SEARCH_FILTER_CHANGED = "net.typeblog.shelter.broadcast.SEARCH_FILTER_CHANGED";
+
+    private static final String LOG_TAG = "Shelter";
 
     private static final int REQUEST_PROVISION_PROFILE = 1;
     private static final int REQUEST_START_SERVICE_IN_WORK_PROFILE = 2;
@@ -84,7 +87,9 @@ public class MainActivity extends AppCompatActivity {
         if (mPolicyManager.isProfileOwnerApp(getPackageName())) {
             // We are now in our own profile
             // We should never start the main activity here.
-            android.util.Log.d("MainActivity", "started in user profile. stopping.");
+            if (Log.isLoggable(LOG_TAG, Log.DEBUG)){
+                Log.d(LOG_TAG , "MainActivity: started in user profile. stopping.");
+            }
             finish();
         } else {
             if (!mStorage.getBoolean(LocalStorageManager.PREF_IS_DEVICE_ADMIN)) {
