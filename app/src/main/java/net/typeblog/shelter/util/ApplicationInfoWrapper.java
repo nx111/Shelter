@@ -8,6 +8,9 @@ import android.content.pm.ResolveInfo;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ApplicationInfoWrapper implements Parcelable {
     public static final Parcelable.Creator<ApplicationInfoWrapper> CREATOR = new Parcelable.Creator<ApplicationInfoWrapper>() {
         @Override
@@ -31,6 +34,12 @@ public class ApplicationInfoWrapper implements Parcelable {
     // PackageManager.MATCH_ANY_USER marked as SystemApi, so redefend it here.
     private static final int MATCH_ANY_USER = 0x00400000;
 
+    // ingore packages in work profile
+    private static final List<String> mIgnorePackages = Arrays.asList(
+            "com.google.android.gms",
+            "com.android.settings"
+    );
+
     private ApplicationInfoWrapper() {}
 
     public ApplicationInfoWrapper(ApplicationInfo info) {
@@ -52,6 +61,11 @@ public class ApplicationInfoWrapper implements Parcelable {
 
         try {
             int myUserId = pm.getApplicationInfo(myPackageName,0).uid / PER_USER_RANGE;
+
+            if (mIgnorePackages.contains(packageName) && myUserId > 0) {
+                return false;
+            }
+
             info = new ApplicationInfoWrapper(pm.getApplicationInfo(packageName, 0));
             if (info == null || (info.getInfo().uid / PER_USER_RANGE) != myUserId) {
                 return false;
