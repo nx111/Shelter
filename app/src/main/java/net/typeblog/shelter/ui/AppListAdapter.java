@@ -332,7 +332,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         if (mLabelDisabled == null) {
             mLabelDisabled = viewGroup.getContext().getString(R.string.list_item_disabled);
         }
-        LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+        LayoutInflater inflater = viewGroup.getContext().getSystemService(LayoutInflater.class);
         View view = inflater.inflate(R.layout.app_list_item, viewGroup, false);
         ViewHolder vh = new ViewHolder(view);
         vh.setIndex(i);
