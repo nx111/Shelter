@@ -139,7 +139,7 @@ public class CrossProfileDocumentsProvider extends DocumentsProvider {
     public Cursor queryDocument(String documentId, String[] projection) {
         ensureServiceBound();
         final MatrixCursor result = new MatrixCursor(projection == null ? DEFAULT_DOCUMENT_PROJECTION : projection);
-        Map<String, Serializable> fileInfo;
+        Map<String, Object> fileInfo;
         try {
             fileInfo = mService.loadFileMeta(documentId);
         } catch (RemoteException e) {
@@ -153,7 +153,7 @@ public class CrossProfileDocumentsProvider extends DocumentsProvider {
     @Override
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) {
         ensureServiceBound();
-        List<Map<String, Serializable>> files;
+        List<Map<String, Object>> files;
         try {
             files = mService.loadFiles(parentDocumentId);
         } catch (RemoteException e) {
