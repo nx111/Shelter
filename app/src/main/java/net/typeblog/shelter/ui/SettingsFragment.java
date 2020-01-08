@@ -15,7 +15,6 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.services.IShelterService;
-import net.typeblog.shelter.util.BiometricUtils;
 import net.typeblog.shelter.util.SettingsManager;
 import net.typeblog.shelter.util.Utility;
 
@@ -33,7 +32,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
     private static final String SETTINGS_AUTO_FREEZE_SERVICE = "settings_auto_freeze_service";
     private static final String SETTINGS_AUTO_FREEZE_DELAY = "settings_auto_freeze_delay";
     private static final String SETTINGS_SKIP_FOREGROUND = "settings_dont_freeze_foreground";
-    private static final String SETTINGS_FINGERPRINT_AUTH = "settings_fingerprint_auth_service";
 
     private SettingsManager mManager = SettingsManager.getInstance();
     private IShelterService mServiceWork = null;
@@ -42,7 +40,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
     private CheckBoxPreference mPrefCameraProxy = null;
     private CheckBoxPreference mPrefAutoFreezeService = null;
     private CheckBoxPreference mPrefSkipForeground = null;
-    private CheckBoxPreference mPrefFingerprintAuth = null;
 
     private Preference mPrefAutoFreezeDelay = null;
 
@@ -87,10 +84,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         mPrefSkipForeground = (CheckBoxPreference) findPreference(SETTINGS_SKIP_FOREGROUND);
         mPrefSkipForeground.setChecked(mManager.getSkipForegroundEnabled());
         mPrefSkipForeground.setOnPreferenceChangeListener(this);
-
-        mPrefFingerprintAuth = (CheckBoxPreference) findPreference(SETTINGS_FINGERPRINT_AUTH);
-        mPrefFingerprintAuth.setChecked(mManager.getFingerprintAuthEnabled());
-        mPrefFingerprintAuth.setOnPreferenceChangeListener(this);
 
         // Disable FileSuttle on Q for now
         // TODO: Refactor FileShuttle and remove this
@@ -158,13 +151,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
                         .show();
                 return false;
             }
-        } else if (preference == mPrefFingerprintAuth) {
-            if ((BiometricUtils.isPermissionGranted(getContext()) || BiometricUtils.isBiometricPromptEnabled(getContext())) &&
-                    BiometricUtils.isHardwareSupported(getContext()) && BiometricUtils.isFingerprintAvailable(getContext()))
-                mManager.setFingerprintAuthEnabled((boolean) newState);
-            else
-                mManager.setFingerprintAuthEnabled(false);
-            return true;
         } else {
             return false;
         }
