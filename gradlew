@@ -180,5 +180,14 @@ if [ -f app/build/outputs/apk/release/app-release-unsigned.apk -a -f sign-tools/
     versionCode=$(date +%Y%m%d)
     versionName=$(grep "[[:space:]]*versionName[[:space:]]*\".*\"" app/build.gradle  | sed -e "s/^[[:space:]]*versionName[[:space:]]*//g" | sed -e "s/\"//g")
     apkname=$(basename $(pwd))
-    java -jar sign-tools/signapk.jar sign-tools/x509.pem sign-tools/key.pk8 app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/${apkname}-${versionName}_${versionCode}-signed.apk
+    unsignedApk=app/build/outputs/apk/release/app-release-unsigned.apk
+    signedApk=app/build/outputs/apk/release/${apkname}-${versionName}_${versionCode}-signed.apk
+    cp $unsignedApk $signedApk
+    java -jar sign-tools/apksigner.jar sign --cert  sign-tools/x509.pem --key sign-tools/key.pk8 $signedApk
+    if [ $? -eq 0 ]; then
+         rm $unsignedApk
+    else
+         rm $signedApk
+         echo "Signing apk failed ..."
+    fi
 fi
