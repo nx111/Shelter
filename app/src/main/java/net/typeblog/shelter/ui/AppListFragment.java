@@ -352,7 +352,7 @@ public class AppListFragment extends BaseFragment {
             menu.add(Menu.NONE, MENU_ITEM_CLONE, Menu.NONE, R.string.clone_to_work_profile);
         }
 
-        if (!mSelectedApp.isSystem() && mIsRemote) {
+        if (mIsRemote) {
             // We can't uninstall system apps in both cases
             // but we'll be able to "freeze" them
             menu.add(Menu.NONE, MENU_ITEM_UNINSTALL, Menu.NONE, R.string.uninstall_app);
