@@ -331,17 +331,20 @@ public class DummyActivity extends AppCompatActivity {
         PackageInstaller.Session session = pi.openSession(sessionId);
 
         InputStream is = getContentResolver().openInputStream(uri);
-        OutputStream os = session.openWrite(UUID.randomUUID().toString(), 0, is.available());
+        long sizeBytes = 0;
+        OutputStream os = session.openWrite(UUID.randomUUID().toString(), 0, sizeBytes);
         Utility.pipe(is, os);
         session.fsync(os);
         os.close();
         is.close();
 
         Intent intent = new Intent(this, DummyActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(PACKAGEINSTALLER_CALLBACK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                intent, PendingIntent.FLAG_CANCEL_CURRENT);
         session.commit(pendingIntent.getIntentSender());
+        session.close();
     }
 
     private void actionUninstallPackage() {
