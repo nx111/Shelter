@@ -95,7 +95,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         // Disable FileSuttle on Q for now
         // TODO: Refactor FileShuttle and remove this
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mPrefCrossProfileFileChooser.setEnabled(false);
+            mPrefCrossProfileFileChooser.setVisible(false);
         }
     }
 
