@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -344,6 +345,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_activity_menu, menu);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            menu.findItem(R.id.main_menu_install_app_to_profile).setVisible(false);
+        }
 
         // Initialize the search button
         SearchView searchView = (SearchView) menu.findItem(R.id.main_menu_search).getActionView();
