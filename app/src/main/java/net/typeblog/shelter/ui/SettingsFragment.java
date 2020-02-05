@@ -92,6 +92,11 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         mPrefFingerprintAuth.setChecked(mManager.getFingerprintAuthEnabled());
         mPrefFingerprintAuth.setOnPreferenceChangeListener(this);
 
+        boolean mAutoFreezeServiceState = mManager.getAutoFreezeServiceEnabled();
+        mPrefAutoFreezeDelay.setVisible(mAutoFreezeServiceState);
+        mPrefSkipForeground.setVisible(mAutoFreezeServiceState);
+        mPrefFingerprintAuth.setVisible(mAutoFreezeServiceState);
+
         // Disable FileSuttle on Q for now
         // TODO: Refactor FileShuttle and remove this
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -136,6 +141,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
             return true;
         } else if (preference == mPrefAutoFreezeService) {
             mManager.setAutoFreezeServiceEnabled((boolean) newState);
+            mPrefAutoFreezeDelay.setVisible((boolean) newState);
+            mPrefSkipForeground.setVisible((boolean) newState);
+            mPrefFingerprintAuth.setVisible((boolean) newState);
             return true;
         } else if (preference == mPrefSkipForeground) {
             boolean enabled = (boolean) newState;
