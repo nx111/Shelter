@@ -134,7 +134,7 @@ public class DummyActivity extends AppCompatActivity {
 
         // First check if we have a registered request from the same process
         // if it passes, we don't have to check if it has proper signature any more
-        if (!checkSameProcessRequest(getIntent())) {
+        if (!checkSameProcessRequest(intent)) {
             // Check the intent signature first
             // Call checkIntent() first, because we might receive an auth_key from the other side any time.
             // Calling checkIntent() will ensure that the first auth_key is properly received.
@@ -148,7 +148,7 @@ public class DummyActivity extends AppCompatActivity {
                 }
             }
         }
-        checkIntent(getIntent());
+        checkIntent(intent);
     }
 
     private void checkIntent(Intent intent) {
