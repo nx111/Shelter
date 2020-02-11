@@ -5,8 +5,11 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -15,10 +18,12 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.StrictMode;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricPrompt;
@@ -37,6 +42,7 @@ import net.typeblog.shelter.util.SettingsManager;
 import net.typeblog.shelter.util.Utility;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -276,23 +282,30 @@ public class DummyActivity extends AppCompatActivity {
 
     private void actionInstallPackage() {
         Uri uri = null;
+        String[] split_apks = null;
+
         if (getIntent().hasExtra("package")) {
             uri = Uri.fromParts("package", getIntent().getStringExtra("package"), null);
         }
         StrictMode.VmPolicy policy = StrictMode.getVmPolicy();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || getIntent().hasExtra("direct_install_apk")) {
-            if (getIntent().hasExtra("apk")) {
-                // I really have no idea about why the "package:" uri do not work
-                // after Android O, anyway we fall back to using the apk path...
-                // Since I have plan to support pre-O in later versions, I keep this
-                // branch in case that we reduce minSDK in the future.
-                uri = Uri.fromFile(new File(getIntent().getStringExtra("apk")));
-            } else if (getIntent().hasExtra("direct_install_apk")) {
+            if (getIntent().hasExtra("direct_install_apk")) {
                 // Directly install an APK inside the profile
                 // The APK will be an Uri from our own FileProviderProxy
                 // which points to an opened Fd in another profile.
                 // We must close the Fd when we finish.
                 uri = getIntent().getParcelableExtra("direct_install_apk");
+            }
+            else if (getIntent().hasExtra("apk")) {
+                // I really have no idea about why the "package:" uri do not work
+                // after Android O, anyway we fall back to using the apk path...
+                // Since I have plan to support pre-O in later versions, I keep this
+                // branch in case that we reduce minSDK in the future.
+                uri = Uri.fromFile(new File(getIntent().getStringExtra("apk")));
+            }
+
+            if (getIntent().hasExtra("split_apks")){
+                split_apks = getIntent().getStringArrayExtra("split_apks");
             }
 
             // A permissive VmPolicy must be set to work around
@@ -302,7 +315,7 @@ public class DummyActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             try {
-                actionInstallPackageQ(uri);
+                actionInstallPackageQ(uri, split_apks);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -323,28 +336,52 @@ public class DummyActivity extends AppCompatActivity {
     // We have to switch to using PackageInstaller for the job, which isn't quite
     // as elegant because now we really need to read the entire apk and write to it
     // Keep this case only for Q for now.
-    private void actionInstallPackageQ(Uri uri) throws IOException {
+    private void actionInstallPackageQ(Uri uri, String[] split_apks) throws IOException {
         PackageInstaller pi = getPackageManager().getPackageInstaller();
+        PackageInfo pkgInfo = getPackageManager().getPackageArchiveInfo(uri.getPath(), PackageManager.GET_ACTIVITIES);
+
+        String packageName = null;
+        if (pkgInfo != null) {
+              packageName = pkgInfo.packageName;
+        }
+
         PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
                 PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+        if (packageName != null) {
+            params.setAppPackageName(packageName);
+        }
+
         int sessionId = pi.createSession(params);
         PackageInstaller.Session session = pi.openSession(sessionId);
+        int apks_count = 1;
+        if (split_apks != null) {
+            apks_count += split_apks.length;
+        }
+        String[] apks = new String[apks_count];
+        apks[0] = uri.getPath();
+        if (split_apks != null) {
+            System.arraycopy(split_apks, 0, apks, 1, split_apks.length);
+        }
 
-        InputStream is = getContentResolver().openInputStream(uri);
-        long sizeBytes = 0;
-        OutputStream os = session.openWrite(UUID.randomUUID().toString(), 0, sizeBytes);
-        Utility.pipe(is, os);
-        session.fsync(os);
-        os.close();
-        is.close();
+        try {
+            for (String item:apks ) {
+                try (InputStream is = getContentResolver().openInputStream(Uri.fromFile(new File(item)));
+                       OutputStream os = session.openWrite(String.format(item.substring(item.lastIndexOf("/")+1)), 0, (new File(item)).length())){
+                    Utility.pipe(is, os);
+                    session.fsync(os);
+                }
+            }
 
-        Intent intent = new Intent(this, DummyActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(PACKAGEINSTALLER_CALLBACK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                intent, PendingIntent.FLAG_CANCEL_CURRENT);
-        session.commit(pendingIntent.getIntentSender());
-        session.close();
+           Intent intent = new Intent(this, DummyActivity.class);
+           intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+           intent.setAction(PACKAGEINSTALLER_CALLBACK);
+           PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+               intent, 0);
+           session.commit(pendingIntent.getIntentSender());
+        } finally {
+            if (session != null)
+                session.close();
+        }
     }
 
     private void actionUninstallPackage() {
@@ -370,7 +407,7 @@ public class DummyActivity extends AppCompatActivity {
         Intent intent = new Intent(this, DummyActivity.class);
         intent.setAction(PACKAGEINSTALLER_CALLBACK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                intent, 0);
         pi.uninstall(getIntent().getStringExtra("package"), pendingIntent.getIntentSender());
     }
 
