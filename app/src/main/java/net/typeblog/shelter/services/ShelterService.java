@@ -17,6 +17,7 @@ import android.content.SharedPreferences;
 import android.content.SyncAdapterType;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -37,6 +38,7 @@ import net.typeblog.shelter.util.FileProviderProxy;
 import net.typeblog.shelter.util.UriForwardProxy;
 import net.typeblog.shelter.util.Utility;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -155,6 +157,19 @@ public class ShelterService extends Service {
                 intent.setComponent(new ComponentName(ShelterService.this, DummyActivity.class));
                 intent.putExtra("package", app.getPackageName());
                 intent.putExtra("apk", app.getSourceDir());
+
+                String logMsg = "installApp: packageName: " + app.getPackageName() + " base: " + app.getSourceDir();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (app.getInfo().splitSourceDirs != null){
+                        intent.putExtra("split_apks", app.getInfo().splitSourceDirs);
+                        logMsg += " split_apks:" + Arrays.toString(app.getInfo().splitSourceDirs);
+                    }
+                }
+
+                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)){
+                    Log.v(LOG_TAG, logMsg);
+                }
 
                 // Send the callback to the DummyActivity
                 Bundle callbackExtra = new Bundle();
@@ -393,12 +408,16 @@ public class ShelterService extends Service {
             for (String packageName : mGAppsCore) {
                 try {
                     if (!prefSystemAppEnabled.getBoolean(packageName, false) || force) {
-                        mPolicyManager.enableSystemApp(mAdminComponent, packageName);
-                        editor.putBoolean(packageName, true);
+                        ApplicationInfo mInfo = mPackageManager.getApplicationInfo(packageName, 0);
+                        if ((mInfo.flags & ApplicationInfo.FLAG_INSTALLED) != 0 && (mInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                            mPolicyManager.enableSystemApp(mAdminComponent, packageName);
+                            editor.putBoolean(packageName, true);
+                        }
                     } else if (Log.isLoggable(LOG_TAG, Log.VERBOSE)){
                         Log.v(LOG_TAG, "installGAppsCore: " + packageName + " always installed in Shelter.");
                     }
-
+                } catch (PackageManager.NameNotFoundException e) {
+                    // do nothing
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "enable System App " + " failed (" + packageName + "), Exception thrown:" + e);
                 }

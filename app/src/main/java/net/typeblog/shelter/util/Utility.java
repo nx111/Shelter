@@ -374,15 +374,6 @@ public class Utility {
         return mode == AppOpsManager.MODE_ALLOWED;
     }
 
-    // Pipe an InputStream to OutputStream
-    public static void pipe(InputStream is, OutputStream os) throws IOException {
-        int n;
-        byte[] buffer = new byte[65536];
-        while ((n = is.read(buffer)) > -1) {
-            os.write(buffer, 0, n);
-        }
-    }
-
     // Utilities to build notifications for cross-version compatibility
     private static final String NOTIFICATION_CHANNEL_ID = "ShelterService";
     private static final String NOTIFICATION_CHANNEL_IMPORTANT = "ShelterService-Important";
