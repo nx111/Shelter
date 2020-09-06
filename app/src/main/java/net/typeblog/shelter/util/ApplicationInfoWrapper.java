@@ -1,13 +1,12 @@
 package net.typeblog.shelter.util;
 
-import android.app.admin.DevicePolicyManager;
 import android.content.Context;
-import android.content.Intent;
+import android.annotation.TargetApi;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.UserHandle;
@@ -90,6 +89,11 @@ public class ApplicationInfoWrapper implements Parcelable {
 
     public String getSourceDir() {
         return mInfo.sourceDir;
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    public String[] getSplitApks() {
+        return mInfo.splitSourceDirs;
     }
 
     // NOTE: This does not relate to the "freezing" feature in Shelter

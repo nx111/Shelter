@@ -72,6 +72,16 @@ public class ShelterService extends Service {
         "com.google.android.setupwizard",
     };
 
+    // When we need to start an activity, we need something else to do it for us
+    // as per background limitation of Android 10
+    // We mostly need this for app cloning / installation
+    // (we could probably just invoke DummyActivity directly from the other side,
+    //  but there are cases where DummyActivity isn't needed, e.g. when cloning
+    //  system applications. These cases can be handled without DummyActivity
+    //  and without any visual interference.)
+    // Note that this proxy can only start activity that is accessible to the
+    // main profile and within the application itself.
+    private IStartActivityProxy mStartActivityProxy = null;
     private IShelterService.Stub mBinder = new IShelterService.Stub() {
         @Override
         public void ping() {
@@ -157,6 +167,8 @@ public class ShelterService extends Service {
                 intent.setComponent(new ComponentName(ShelterService.this, DummyActivity.class));
                 intent.putExtra("package", app.getPackageName());
                 intent.putExtra("apk", app.getSourceDir());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    intent.putExtra("split_apks", app.getSplitApks());
 
                 String logMsg = "installApp: packageName: " + app.getPackageName() + " base: " + app.getSourceDir();
 
@@ -177,7 +189,8 @@ public class ShelterService extends Service {
                 intent.putExtra("callback", callbackExtra);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 DummyActivity.registerSameProcessRequest(intent);
-                startActivity(intent);
+                if (mStartActivityProxy != null)
+                    mStartActivityProxy.startActivity(intent);
             } else {
                 if (mIsProfileOwner) {
                     // We can only enable system apps in our own profile
@@ -198,7 +211,7 @@ public class ShelterService extends Service {
         }
 
         @Override
-        public void installApk(UriForwardProxy uriForwarder, IAppInstallCallback callback) {
+        public void installApk(UriForwardProxy uriForwarder, IAppInstallCallback callback) throws RemoteException {
             // Directly install an APK through a given Fd
             // instead of installing an existing one
             Intent intent = new Intent(DummyActivity.INSTALL_PACKAGE);
@@ -215,7 +228,8 @@ public class ShelterService extends Service {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             DummyActivity.registerSameProcessRequest(intent);
-            startActivity(intent);
+            if (mStartActivityProxy != null)
+                mStartActivityProxy.startActivity(intent);
         }
 
         @Override
@@ -232,7 +246,9 @@ public class ShelterService extends Service {
                 intent.putExtra("callback", callbackExtra);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 DummyActivity.registerSameProcessRequest(intent);
-                startActivity(intent);
+
+                if (mStartActivityProxy != null)
+                    mStartActivityProxy.startActivity(intent);
             } else {
                 if (mIsProfileOwner) {
                     // This is essentially the same as disabling the system app
@@ -334,6 +350,11 @@ public class ShelterService extends Service {
        @Override
        public void setPackagesRefreshed(boolean value) {
            mPackagesRefreshed = value;
+       }
+
+       @Override
+       public void setStartActivityProxy(IStartActivityProxy proxy) {
+           mStartActivityProxy = proxy;
        }
     };
 

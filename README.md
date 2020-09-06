@@ -1,9 +1,16 @@
-![Shelter](https://git.angry.im/PeterCxy/Shelter/raw/branch/master/art/ic_launcher_egg-web.png)
+![Shelter](https://cgit.typeblog.net/Shelter/plain/art/ic_launcher_egg-web.png)
 
 <a href='https://play.google.com/store/apps/details?id=net.typeblog.shelter&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="80"/></a>
 <a href="https://f-droid.org/app/net.typeblog.shelter"><img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
 
-Note: the GitHub repository is merely a mirror. Although I also accept pull requests and issues from GitHub, I'd recommend you to go to the main repository at <https://git.angry.im/PeterCxy/Shelter>
+Note: main repository: <https://cgit.typeblog.net/Shelter/>. __The GitHub repository is only a mirror__. I do not guarantee the GitHub repository will be up-to-date.
+
+For bug reports and patches (pull requests), please use the following contact methods:
+
+- Mailing List (SourceHut): <https://lists.sr.ht/~petercxy/shelter>
+- Matrix Chat Room: #shelter:neo.angry.im
+
+On GitHub, any new issues or pull requests will not be read or accepted. Please use the contacts listed above.
 
 Note: The F-Droid version is automatically built and signed by the F-Droid server on each update of Shelter. The build is not managed by the author and could lag behind the updates from Play Store and this repository for several days due to high server load.
 
@@ -23,6 +30,14 @@ Features / Use Cases
 1. Run "Big Brother" apps inside the isolated profile so they cannot access your data / files outside the profile
 2. "Freeze" (disable) background-heavy, tracking-heavy or seldom-used apps when you don't need them. This is especially true if you use apps from Chinese companies like Baidu, Alibaba, Tencent.
 3. Clone apps to use two accounts on one device
+
+Known Issues
+===
+
+1. "Split APKs" (APKs that consist of multiple sub-packages) cannot be cloned properly. This includes a lot of applications on the Play Store (e.g. WhatsApp). When possible, use "Install APK into Shelter" from the menu instead.
+2. File Shuttle is not supported on Android 10
+3. Shelter must be installed in INTERNAL STORAGE, otherwise the initialization process will fail.
+4. You have to click a notification in order to finish the initialization process due to the limitations of background apps introduced since Android 10. When initializing, please make sure you are not in "Do Not Disturb" mode.
 
 Caveats
 ===
@@ -51,7 +66,7 @@ FAQS
 **A**: 1) Go to Settings -> Accounts to remove the work profile; 2) Go to Settings -> Security -> Advanced -> Device admin apps to remove Shelter from Device Admin apps; 3) Uninstall Shelter normally.
 
 **Q**: If I encounter bugs, how do I report them?  
-**A**: You could file an issue on either the main repository at <https://git.angry.im/PeterCxy/Shelter> or the mirror repository at <https://github.com/PeterCxy/Shelter>. Please include your system information as well as a logcat if possible.
+**A**: Please send a message to our mailing list <https://lists.sr.ht/~petercxy/shelter>. You may also join our Matrix chat room at #shelter:neo.angry.im. 
 
 **Q**: How do I support the project?  
 **A**: You can submit issues if you find a bug or have an idea about features of Shelter; you may also contribute code to this project if you can code; providing translations is also welcomed. If you have some extra money lying around, you can also [support me on Patreon](https://www.patreon.com/PeterCxy).

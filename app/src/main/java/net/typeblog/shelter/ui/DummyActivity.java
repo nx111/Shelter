@@ -3,6 +3,7 @@ package net.typeblog.shelter.ui;
 import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -18,7 +19,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.StrictMode;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,6 +37,7 @@ import net.typeblog.shelter.services.IFileShuttleService;
 import net.typeblog.shelter.services.IFileShuttleServiceCallback;
 import net.typeblog.shelter.util.AuthenticationUtility;
 import net.typeblog.shelter.util.FileProviderProxy;
+import net.typeblog.shelter.util.InstallationProgressListener;
 import net.typeblog.shelter.util.LocalStorageManager;
 import net.typeblog.shelter.util.SettingsManager;
 import net.typeblog.shelter.util.Utility;
@@ -46,6 +47,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -315,7 +317,12 @@ public class DummyActivity extends AppCompatActivity {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             try {
-                actionInstallPackageQ(uri, split_apks);
+                // For Q, since we use the more "manual" method of installation,
+                // we have to also pass the split APKs ("Configuration APKs" as Google calls it)
+                // Although these are available since API 26, we don't need to
+                // take care of them for versions before Q since we don't actually
+                // install the APKs before Q.
+                actionInstallPackageQ(uri, getIntent().getStringArrayExtra("split_apks"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -352,40 +359,54 @@ public class DummyActivity extends AppCompatActivity {
         }
 
         int sessionId = pi.createSession(params);
+
+        // Show the progress dialog first
+        pi.registerSessionCallback(new InstallationProgressListener(this, pi, sessionId));
+
         PackageInstaller.Session session = pi.openSession(sessionId);
-        int apks_count = 1;
-        if (split_apks != null) {
-            apks_count += split_apks.length;
-        }
-        String[] apks = new String[apks_count];
-        apks[0] = uri.getPath();
-        if (split_apks != null) {
-            System.arraycopy(split_apks, 0, apks, 1, split_apks.length);
+       doInstallPackageQ(uri, split_apks, session, () -> {
+            // We have finished piping the streams, show the progress as 10%
+            session.setStagingProgress(0.1f);
+
+            // Commit the session
+            Intent intent = new Intent(this, DummyActivity.class);
+            intent.setAction(PACKAGEINSTALLER_CALLBACK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            session.commit(pendingIntent.getIntentSender());
+        });
+    }
+
+    // The background part of the installation process on Q (reading APKs etc)
+    // that must be executed on another thread
+    // Put them in background to avoid stalling the UI thread
+    private void doInstallPackageQ(Uri baseUri, String[] split_apks, PackageInstaller.Session session, Runnable callback) {
+        ArrayList<Uri> uris = new ArrayList<>();
+        uris.add(baseUri);
+        if (split_apks != null && split_apks.length > 0) {
+            for (String apk : split_apks) {
+                uris.add(Uri.fromFile(new File(apk)));
+            }
         }
 
-        try {
-            for (String item:apks ) {
-                try (InputStream is = getContentResolver().openInputStream(Uri.fromFile(new File(item)));
-                       OutputStream os = session.openWrite(String.format(item.substring(item.lastIndexOf("/")+1)), 0, (new File(item)).length())){
-                    int n;
+        new Thread(() -> {
+            for (Uri uri : uris) {
+                try (InputStream is = getContentResolver().openInputStream(uri);
+                     OutputStream os = session.openWrite(UUID.randomUUID().toString(), 0, is.available())
+                ) {
+                    int n = 0;
                     byte[] buffer = new byte[65536];
                     while ((n = is.read(buffer)) > -1) {
-                        os.write(buffer, 0, n);
-                        session.fsync(os);
+                       os.write(buffer, 0, n);
                     }
+                    session.fsync(os);
+                } catch (IOException e) {
+
                 }
             }
 
-           Intent intent = new Intent(this, DummyActivity.class);
-           intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-           intent.setAction(PACKAGEINSTALLER_CALLBACK);
-           PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-               intent, 0);
-           session.commit(pendingIntent.getIntentSender());
-        } finally {
-            if (session != null)
-                session.close();
-        }
+            runOnUiThread(callback);
+        }).start();
     }
 
     private void actionUninstallPackage() {

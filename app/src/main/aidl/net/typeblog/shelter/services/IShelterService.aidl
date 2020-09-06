@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo;
 import net.typeblog.shelter.services.IAppInstallCallback;
 import net.typeblog.shelter.services.IGetAppsCallback;
 import net.typeblog.shelter.services.ILoadIconCallback;
+import net.typeblog.shelter.services.IStartActivityProxy;
 import net.typeblog.shelter.util.ApplicationInfoWrapper;
 import net.typeblog.shelter.util.UriForwardProxy;
 
@@ -25,4 +26,5 @@ interface IShelterService {
     boolean hasUsageStatsPermission();
     List<String> getCrossProfileWidgetProviders();
     boolean setCrossProfileWidgetProviderEnabled(String pkgName, boolean enabled);
+    void setStartActivityProxy(in IStartActivityProxy proxy);
 }
