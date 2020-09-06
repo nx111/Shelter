@@ -154,7 +154,7 @@ public class DummyActivity extends AppCompatActivity {
                 }
             }
         }
-        checkIntent(intent);
+        checkIntent(getIntent());
     }
 
     private void checkIntent(Intent intent) {
