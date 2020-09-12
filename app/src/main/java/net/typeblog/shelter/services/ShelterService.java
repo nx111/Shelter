@@ -325,6 +325,16 @@ public class ShelterService extends Service {
         }
 
         @Override
+        public boolean hasSystemAlertPermission() {
+            return Utility.checkSystemAlertPermission(ShelterService.this);
+        }
+
+        @Override
+        public boolean hasAllFileAccessPermission() {
+            return Utility.checkAllFileAccessPermission();
+        }
+
+        @Override
         public List<String> getCrossProfileWidgetProviders() {
             if (!mIsProfileOwner)
                 throw new IllegalStateException("Cannot access cross-profile widget providers without being profile owner");

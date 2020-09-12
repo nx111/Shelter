@@ -383,6 +383,17 @@ public class Utility {
         return checkSpecialAccessPermission(context, AppOpsManager.OPSTR_GET_USAGE_STATS);
     }
 
+    // Check if SYSTEM_ALERT_WINDOW is granted
+    public static boolean checkSystemAlertPermission(Context context) {
+        return checkSpecialAccessPermission(context, AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW);
+    }
+
+    // Check if all file access r/w is granted
+    @TargetApi(Build.VERSION_CODES.R)
+    public static boolean checkAllFileAccessPermission() {
+        return Environment.isExternalStorageManager();
+    }
+
     // Check special access permission through AppOps
     public static boolean checkSpecialAccessPermission(Context context, String name) {
         AppOpsManager appops = context.getSystemService(AppOpsManager.class);

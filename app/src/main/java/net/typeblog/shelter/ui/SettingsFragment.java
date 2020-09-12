@@ -1,5 +1,7 @@
 package net.typeblog.shelter.ui;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -98,9 +100,17 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         mPrefFingerprintAuth.setVisible(mAutoFreezeServiceState);
 
         // Disable FileSuttle on Q for now
-        // TODO: Refactor FileShuttle and remove this
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mPrefCrossProfileFileChooser.setVisible(false);
+        // Supported on R and beyond
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            mPrefCrossProfileFileChooser.setEnabled(false);
+        }
+
+        // Disable FileShuttle for Android Go
+        // as it requires SYSTEM_ALERT_WINDOW which
+        // is not allowed on Go devices
+        ActivityManager am = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+        if (am.isLowRamDevice()) {
+            mPrefCrossProfileFileChooser.setEnabled(false);
         }
     }
 
@@ -134,7 +144,47 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
     @Override
     public boolean onPreferenceChange(Preference preference, Object newState) {
         if (preference == mPrefCrossProfileFileChooser) {
-            mManager.setCrossProfileFileChooserEnabled((boolean) newState);
+            boolean enabled = (boolean) newState;
+            if (!enabled) {
+                mManager.setCrossProfileFileChooserEnabled(false);
+                return true;
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Request all files permission on R and beyond
+                boolean hasPermission = ensureSpecialAccessPermission(() -> {
+                    try {
+                        return mServiceWork.hasAllFileAccessPermission() && Utility.checkAllFileAccessPermission();
+                    } catch (RemoteException e) {
+                        return false;
+                    }
+                }, R.string.request_storage_manager, Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+
+                if (!hasPermission) {
+                    return false;
+                }
+
+                // Also needs system alert window permission
+                // because File Shuttle needs to start activities in the background
+                // We cannot do the same notification trick as in initial setup
+                // because it would be too annoying having to click a notification
+                // every time a user tries to use File Shuttle.
+                // NOTE: Enabling this permission may mask some bugs with background
+                // activities. Always test with this disabled.
+                hasPermission = ensureSpecialAccessPermission(() -> {
+                    try {
+                        return mServiceWork.hasSystemAlertPermission() && Utility.checkSystemAlertPermission(getContext());
+                    } catch (RemoteException e) {
+                        return false;
+                    }
+                }, R.string.request_system_alert, Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+
+                if (!hasPermission) {
+                    return false;
+                }
+            }
+
+            mManager.setCrossProfileFileChooserEnabled(true);
             return true;
         } else if (preference == mPrefCameraProxy) {
             mManager.setCameraProxyEnabled(((boolean) newState));
@@ -147,25 +197,25 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
             return true;
         } else if (preference == mPrefSkipForeground) {
             boolean enabled = (boolean) newState;
-            boolean hasPermission = false;
-            try {
-                hasPermission = mServiceWork.hasUsageStatsPermission() && Utility.checkUsageStatsPermission(getContext());
-            } catch (RemoteException e) {
-
-            }
-            if (!enabled || hasPermission) {
-                mManager.setSkipForegroundEnabled(enabled);
+            if (!enabled) {
+                mManager.setSkipForegroundEnabled(false);
                 return true;
-            } else {
-                new AlertDialog.Builder(getContext())
-                        .setMessage(R.string.request_usage_stats)
-                        .setPositiveButton(android.R.string.ok,
-                                (dialog, which) -> startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)))
-                        .setNegativeButton(android.R.string.cancel,
-                                (dialog, which) -> dialog.dismiss())
-                        .show();
-                return false;
             }
+
+            boolean hasPermission = ensureSpecialAccessPermission(() -> {
+                try {
+                    return mServiceWork.hasUsageStatsPermission() && Utility.checkUsageStatsPermission(getContext());
+                } catch (RemoteException e) {
+                    return false;
+                }
+            }, R.string.request_usage_stats, Settings.ACTION_USAGE_ACCESS_SETTINGS);
+
+            if (!hasPermission)
+                return false;
+
+            mManager.setSkipForegroundEnabled(true);
+
+            return true;
         } else if (preference == mPrefFingerprintAuth) {
             if ((BiometricUtils.isPermissionGranted(getContext()) || BiometricUtils.isBiometricPromptEnabled(getContext())) &&
                     BiometricUtils.isHardwareSupported(getContext()) && BiometricUtils.isFingerprintAvailable(getContext()))
@@ -175,6 +225,25 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
             return true;
         } else {
             return false;
+        }
+    }
+
+    private interface CheckPermissionCallback {
+        boolean check();
+    }
+
+    private boolean ensureSpecialAccessPermission(CheckPermissionCallback checkPermission, int alertRes, String settingsAction) {
+        if (!checkPermission.check()) {
+            new AlertDialog.Builder(getContext())
+                    .setMessage(alertRes)
+                    .setPositiveButton(android.R.string.ok,
+                            (dialog, which) -> startActivity(new Intent(settingsAction)))
+                    .setNegativeButton(android.R.string.cancel,
+                            (dialog, which) -> dialog.dismiss())
+                    .show();
+            return false;
+        } else {
+            return true;
         }
     }
 
