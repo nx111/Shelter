@@ -15,6 +15,7 @@
     <string name="service_auto_freeze_title">自动冻结等待中</string>
     <string name="service_auto_freeze_desc">Shelter 将会在您下次锁屏时自动冻结使用 \"解冻并运行\" 启动的应用</string>
     <string name="service_auto_freeze_now">立刻冻结</string>
+    <string name="app_installing">正在安装...</string>
 
     <!-- Main UI -->
     <string name="fragment_profile_main">主用户</string>
@@ -86,6 +87,8 @@
     <string name="shortcut_create_success">快捷方式已创建</string>
     <string name="request_usage_stats">Shelter 需要 <b>使用情况数据</b> 来做这件事。请在按 \"确定\" 后出现的窗口中，对 <b>两个</b> Shelter <b>都</b> 打开此权限。如果没有全部打开，该功能将无法正确运作。</string>
     <string name="launch_app_fail">无法启动没有用户界面的应用 %s</string>
+    <string name="request_storage_manager">Shelter 需要存取 <b>所有文件</b> 以使用文件穿梭. 请启用在按\"确定\"后对话框显示的两个Shelter (个人 / 工作资料) 应用的相应权限.</string>
+    <string name="request_system_alert">Shelter 需要 <b>在其他应用上拖动</b> 以正确使用文件穿梭. 请启用在按\"确定\"后对话框显示的两个Shelter (个人 / 工作资料) 应用的相应权限. 此权限用于后台启动文件穿梭服务.</string>
 
     <!-- MIUI -->
     <string name="miui_cannot_clone">目前无法在 MIUI 上克隆非系统应用。请先克隆您的系统应用商店 (如 <b>Play Store</b>) 然后从克隆的应用商店中安装应用</string>
