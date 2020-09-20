@@ -47,6 +47,7 @@
     <string name="set_sync_automatically">Set Sync Automatically on Shelter</string>
     <string name="show_all">Show All Apps</string>
     <string name="show_all_warning">Manipulating apps that are hidden from the list could cause crashes and all sorts of unexpected behavior. However, this feature can be useful when faulty vendor-customized ROMs does not enable all necessary system apps in work profile by default. If you continue, you are on your own.</string>
+    <string name="documents_ui">Open Documents UI</string>
 
     <!-- Settings Options -->
     <string name="settings">Settings</string>
@@ -55,6 +56,8 @@
     <string name="settings_cross_profile_file_chooser_desc">When enabled, you\'ll be able to browse / view / pick / copy files in Shelter from main profile and vice-versa, ONLY through Documents UI (named Files or Documents on your launcher) or apps with Documents UI support (they only gain temporary access to files you choose in Documents UI), while still pertaining the filesystem isolation.</string>
     <string name="settings_camera_proxy">Image Chooser as Fake Camera</string>
     <string name="settings_camera_proxy_desc">Present a fake camera app to other apps, allowing you to choose an arbitrary image from Documents UI (and File Shuttle if enabled) as the taken picture. This enables File Shuttle for any app that supports invoking other camera apps to take a picture, even if they don\'t support Documents UI natively.</string>
+    <string name="settings_block_contacts_searching">Block Contacts Searching</string>
+    <string name="settings_block_contacts_searching_desc">Deny access from main profile to contacts inside work profile.</string>
     <string name="settings_services">Services</string>
     <string name="settings_auto_freeze_service">Auto Freeze Service</string>
     <string name="settings_auto_freeze_service_desc">When the screen is locked, automatically freeze apps launched from \"Unfreeze &amp; Launch Shortcut\".</string>
@@ -68,6 +71,8 @@
     <string name="settings_version">Version</string>
     <string name="settings_source_code">Source Code</string>
     <string name="settings_source_code_url" translatable="false">https://github.com/nx111/Shelter</string>
+    <string name="settings_translate">Translate</string>
+    <string name="settings_translate_url" translatable="false">https://weblate.typeblog.net/projects/shelter/shelter/</string>
     <string name="settings_bug_report">Bug Report / Issue Tracker</string>
     <string name="settings_bug_report_url" translatable="false">https://github.com/nx111/Shelter/issues</string>
     <string name="settings_patreon" translatable="false">Patreon</string>
@@ -86,7 +91,7 @@
     <string name="freeze_success">Application \"%s\" frozen successfully</string>
     <string name="unfreeze_success">Application \"%s\" unfrozen successfully</string>
     <string name="clone_fail_system_app">Cannot clone system apps to a profile that Shelter has no control of.</string>
-    <string name="uninstall_fail_system_app">Cannot uninstall system apps in a profile thaẞt Shelter has no control of.</string>
+    <string name="uninstall_fail_system_app">Cannot uninstall system apps in a profile that Shelter has no control of.</string>
     <string name="unsupported_launcher">Cannot add shortcuts to your launcher. Please contact the developer for more information.</string>
     <string name="app_context_menu_title">Operations for %s</string>
     <string name="freeze_all_success">All apps in \"Auto Freeze\" list have been frozen successfully.</string>
