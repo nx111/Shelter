@@ -33,6 +33,10 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.widget.Toast;
 
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.receivers.ShelterDeviceAdminReceiver;
 import net.typeblog.shelter.services.IShelterService;
@@ -94,6 +98,27 @@ public class Utility {
             intent.setComponent(new ComponentName(i.get().activityInfo.packageName, i.get().activityInfo.name));
         } else {
             throw new IllegalStateException("Cannot find an intent in other profile");
+        }
+    }
+
+    // Determine if the work profile is already available
+    // If so, return true and set all the corresponding flags to true
+    // This is for scenarios where the asynchronous part of the
+    // setup process might be finished before the synchronous part
+    public static boolean isWorkProfileAvailable(Context context) {
+        LocalStorageManager storage = LocalStorageManager.getInstance();
+        Intent intent = new Intent(DummyActivity.TRY_START_SERVICE);
+        try {
+            // DO NOT sign this request, because this won't be actually sent to work profile
+            // If this is signed, and is the first request to be signed,
+            // then the other side would never receive the auth_key
+            Utility.transferIntentToProfileUnsigned(context, intent);
+            storage.setBoolean(LocalStorageManager.PREF_IS_SETTING_UP, false);
+            storage.setBoolean(LocalStorageManager.PREF_HAS_SETUP, true);
+            return true;
+        } catch (IllegalStateException e) {
+            // If any exception is thrown, this means that the profile is not available
+            return false;
         }
     }
 
@@ -552,4 +577,27 @@ public class Utility {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
+    // A wrapper over arbitrary ActivityResultContract that provides
+    // hardcoded input parameters and do not accept input with launch()
+    public static class ActivityResultContractInputWrapper<I, O, T extends ActivityResultContract<I, O>>
+            extends ActivityResultContract<Void, O> {
+        private final T mInner;
+        private final I mInput;
+
+        public ActivityResultContractInputWrapper(T inner, I input) {
+            mInner = inner;
+            mInput = input;
+        }
+
+        @NonNull
+        @Override
+        public Intent createIntent(@NonNull Context context, Void input) {
+            return mInner.createIntent(context, mInput);
+        }
+
+        @Override
+        public O parseResult(int resultCode, @Nullable Intent intent) {
+            return mInner.parseResult(resultCode, intent);
+        }
+    }
 }

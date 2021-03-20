@@ -1,12 +1,27 @@
 <resources>
     <string name="app_name" translatable="false">Shelter</string>
-    <string name="first_run_alert">You are about to set up Shelter.\n\nThis app depends on the <b>Work Profile</b> feature of Android to isolate the apps. If you use a vendor / custom ROM that breaks related features (e.g. MIUI), you should now <b>QUIT</b> and <b>DO NOT</b> use this app.\n\nIf you choose to continue, Shelter will set up Work Profile for you.\n\nIf you are a developer and would like to make Shelter work on those incompatible ROMs like MIUI, pull requests are always welcome. The developer takes <b>ABSOLUTELY NO RESPONSIBILITY</b> if you break your device running an incompatible ROM.\n\nYou will need to receive a notification in order to finish setup, please make sure your device is <b>NOT</b> on Do Not Disturb mode.</string>
     <string name="first_run_alert_cancel">Bye</string>
     <string name="first_run_alert_continue">Continue</string>
     <string name="device_admin_label" translatable="false">Shelter</string>
     <string name="device_admin_desc">App Isolation Service</string>
     <string name="device_admin_explanation">Shelter needs to become Device Admin in order to perform its isolation tasks.</string>
     <string name="camera_proxy_activity">Choose an Image File</string>
+
+    <!-- Setup Wizard -->
+    <string name="setup_wizard_welcome">Welcome to Shelter</string>
+    <string name="setup_wizard_welcome_text">Shelter is an application to help you run other applications in an isolated profile. It does so by making use of the <b>Work Profile</b> feature of Android.\n\nClick \"Next\", and we will provide you with more information about Shelter, and guide you through the setup process.\n\nWe suggest that you read through all of the following pages carefully.</string>
+    <string name="setup_wizard_permissions">A word on permissions</string>
+    <string name="setup_wizard_permissions_text">By default, Shelter will not ask for any individual permissions. However, once you proceed with the setup process, Shelter will try to set up a Work Profile and hence become the <b>profile manager</b> of said profile.\n\nThis will grant Shelter an extensive list of permissions inside the profile, comparable to that of a Device Admin, albeit confined to the profile. Being the profile manager is necessary for most of Shelter\'s functionality.\n\nSome advanced features of Shelter may require more permissions <b>outside</b> the Work Profile. When needed, Shelter will ask for those permissions separately when you enable the corresponding features.</string>
+    <string name="setup_wizard_compatibility">Compatibility</string>
+    <string name="setup_wizard_compatibility_text">Shelter is developed and tested on AOSP-like Android derivatives. This includes AOSP (Android Open Source Project), Google Android (on Pixels), and <b>most AOSP-based open-source custom ROMs</b> such as LineageOS. If your phone is running one of the Android derivatives listed above, then congratulations! Shelter is probably going to work correctly on your device.\n\nSome device vendors introduce very invasive customizations into the Android code base, resulting in conflicts, incompatibility and unexpected behavior. Some custom ROMs can also introduce compatibility-breaking changes, but generally these are rarer occurrences compared to phone vendor-introduced incompatibilities.\n\nSheler is merely an interface into the Work Profile feature provided by the system. If the feature provided by the system is broken or non-standard, <b>Shelter could not magically resolve the issue on its own</b>. If you are currently using a vendor-modified Android version that is known to break Work Profiles, <b>you have been warned</b>. You may proceed anyway, but there is no guarantee that Shelter would behave correctly under these circumstances.</string>
+    <string name="setup_wizard_ready">Ready?</string>
+    <string name="setup_wizard_ready_text">We are now ready to set up Shelter for you. Please first ensure that your device is <b>not</b> in Do Not Disturb mode, because you will need to <b>click on a notification</b> later to finalize the setup process.\n\nWhen you are ready, click on \"Next\" to begin the setup process.</string>
+    <string name="setup_wizard_please_wait">Please wait…</string>
+    <string name="setup_wizard_please_wait_text">We are trying to initialize Work Profile and set up Shelter on your device.</string>
+    <string name="setup_wizard_failed">Setup failed</string>
+    <string name="setup_wizard_failed_text">We regret to inform you that we were not able to set up Shelter for you.\n\nIf you did not cancel the setup manually, then the reason for the failure is most commonly due to a heavily modified system, or a conflict between Shelter and other Work Profile managers. Unfortunately, there is not much that we could do about this.\n\nClick "Next" to exit.</string>
+    <string name="setup_wizard_action_required">Action required</string>
+    <string name="setup_wizard_action_required_text">You should now be seeing a notification from Shelter. <b>Please click on that notification</b> to finish the setup process.\n\nIf you do not see the notification, make sure your device is not in Do Not Disturb mode and try pulling down the notification center.\n\nTo reset Shelter and start over, you can clear the data of Shelter in Settings.</string>
 
     <!-- Notifications -->
     <string name="notifications_important">Shelter Important</string>
@@ -79,8 +94,6 @@
     <string name="settings_patreon_url" translatable="false">https://www.patreon.com/PeterCxy</string>
 
     <!-- Toast Long Texts -->
-    <string name="device_admin_toast">You have to grant Device Admin permission for Shelter to work. Please try again.</string>
-    <string name="provision_still_pending">Please wait while we prepare Shelter profile for you &#8230;</string>
     <string name="provision_finished">Shelter setup complete. Now restarting Shelter. If Shelter didn\'t start automatically, you may launch it again from your launcher.</string>
     <string name="msg_device_unsupported">Permission is denied or Unsupported device</string>
     <string name="work_profile_not_found">Work profile not found. Please restart the app to re-provision the profile.</string>

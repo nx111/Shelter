@@ -1,6 +1,5 @@
 package net.typeblog.shelter.ui;
 
-import android.app.ProgressDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -17,26 +16,27 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.ShelterApplication;
-import net.typeblog.shelter.receivers.ShelterDeviceAdminReceiver;
 import net.typeblog.shelter.services.IAppInstallCallback;
 import net.typeblog.shelter.services.IShelterService;
 import net.typeblog.shelter.services.IStartActivityProxy;
 import net.typeblog.shelter.services.KillerService;
-import net.typeblog.shelter.util.AuthenticationUtility;
 import net.typeblog.shelter.util.LocalStorageManager;
 import net.typeblog.shelter.util.SettingsManager;
 import net.typeblog.shelter.util.UriForwardProxy;
@@ -49,17 +49,21 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "Shelter";
 
-    private static final int REQUEST_PROVISION_PROFILE = 1;
     private static final int REQUEST_START_SERVICE_IN_WORK_PROFILE = 2;
-    private static final int REQUEST_SET_DEVICE_ADMIN = 3;
     private static final int REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE = 4;
-    private static final int REQUEST_DOCUMENTS_CHOOSE_APK = 5;
+
+    private final ActivityResultLauncher<Void> mStartSetup =
+            registerForActivityResult(new SetupWizardActivity.SetupWizardContract(), this::setupWizardCb);
+    private final ActivityResultLauncher<Void> mResumeSetup =
+            registerForActivityResult(new SetupWizardActivity.ResumeSetupContract(), this::setupWizardCb);
+    private final ActivityResultLauncher<Void> mSelectApk =
+            registerForActivityResult(
+                    new Utility.ActivityResultContractInputWrapper<>(
+                            new ActivityResultContracts.OpenDocument(),
+                            new String[]{"application/vnd.android.package-archive"}),
+                    this::onApkSelected);
 
     private LocalStorageManager mStorage = null;
-    private DevicePolicyManager mPolicyManager = null;
-
-    // The "please wait" dialog when creating profile
-    private ProgressDialog mProgressDialog = null;
 
     // Flag to avoid double-killing our services while restarting
     private boolean mRestarting = false;
@@ -67,10 +71,6 @@ public class MainActivity extends AppCompatActivity {
     // Two services running in main / work profile
     private IShelterService mServiceMain = null;
     private IShelterService mServiceWork = null;
-
-    // Views
-    private ViewPager mPager = null;
-    private TabLayout mTabs = null;
 
     // Show all applications or not
     // default to false
@@ -85,9 +85,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.main_toolbar));
         mStorage = LocalStorageManager.getInstance();
-        mPolicyManager = getSystemService(DevicePolicyManager.class);
 
-        if (mPolicyManager.isProfileOwnerApp(getPackageName())) {
+        if (getSystemService(DevicePolicyManager.class).isProfileOwnerApp(getPackageName())) {
             // We are now in our own profile
             // We should never start the main activity here.
             if (Log.isLoggable(LOG_TAG, Log.DEBUG)){
@@ -100,32 +99,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (mProgressDialog != null && isWorkProfileAvailable()) {
-            mProgressDialog.dismiss();
-            init();
-        }
-    }
-
     private void init() {
-        if (mStorage.getBoolean(LocalStorageManager.PREF_IS_SETTING_UP) && !isWorkProfileAvailable()) {
-            // Provision is still going on...
-            Toast.makeText(this, R.string.provision_still_pending, Toast.LENGTH_SHORT).show();
-            finish();
+        if (mStorage.getBoolean(LocalStorageManager.PREF_IS_SETTING_UP) && !Utility.isWorkProfileAvailable(this)) {
+            // System has already finished provisioning, but Shelter still
+            // needs to be brought up inside the work profile
+            mResumeSetup.launch(null);
         } else if (!mStorage.getBoolean(LocalStorageManager.PREF_HAS_SETUP)) {
-            // Reset the authentication key first
-            AuthenticationUtility.reset();
-            // If not set up yet, we have to provision the profile first
-            new AlertDialog.Builder(this)
-                    .setCancelable(false)
-                    .setMessage(R.string.first_run_alert)
-                    .setPositiveButton(R.string.first_run_alert_continue,
-                            (dialog, which) -> setupProfile())
-                    .setNegativeButton(R.string.first_run_alert_cancel,
-                            (dialog, which) -> finish())
-                    .show();
+            mStartSetup.launch(null);
         } else {
             // Initialize the settings
             SettingsManager.getInstance().applyAll();
@@ -134,23 +114,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupProfile() {
-        // Build the provisioning intent first
-        ComponentName admin = new ComponentName(getApplicationContext(), ShelterDeviceAdminReceiver.class);
-        Intent intent = new Intent(DevicePolicyManager.ACTION_PROVISION_MANAGED_PROFILE);
-        intent.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_SKIP_ENCRYPTION, true);
-        intent.putExtra(DevicePolicyManager.EXTRA_PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME, admin);
-
-        // Check if provisioning is allowed
-        if (!mPolicyManager.isProvisioningAllowed(DevicePolicyManager.ACTION_PROVISION_MANAGED_PROFILE)
-                || getPackageManager().resolveActivity(intent, 0) == null) {
-            Toast.makeText(this,
-                    getString(R.string.msg_device_unsupported), Toast.LENGTH_LONG).show();
+    private void setupWizardCb(Boolean result) {
+        if (result)
+            init();
+        else
             finish();
-        }
-
-        // Start provisioning
-        startActivityForResult(intent, REQUEST_PROVISION_PROFILE);
     }
 
     private void bindServices() {
@@ -216,9 +184,9 @@ public class MainActivity extends AppCompatActivity {
     private void buildView() {
         // Finally we can build the view
         // Find all the views
-        mPager = findViewById(R.id.main_pager);
-        mTabs = findViewById(R.id.main_tablayout);
-        mTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        ViewPager2 pager = findViewById(R.id.main_pager);
+        TabLayout tabs = findViewById(R.id.main_tablayout);
+        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 curTabPos = tab.getPosition();
@@ -234,32 +202,32 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize the ViewPager and the tab
         // All the remaining work will be done in the fragments
-        AppListFragmentAdapter mFramgentAdapter =
-            new AppListFragmentAdapter(getSupportFragmentManager());
-        mPager.setAdapter(mFramgentAdapter);
-        mPager.setCurrentItem(curTabPos);
-        mTabs.setupWithViewPager(mPager);
-        mTabs.getTabAt(curTabPos).select();
-    }
+        pager.setAdapter(new FragmentStateAdapter(this) {
+            @NonNull
+            @Override
+            public Fragment createFragment(int position) {
+                if (position == 0) {
+                    return AppListFragment.newInstance(mServiceMain, false);
+                } else if (position == 1) {
+                    return AppListFragment.newInstance(mServiceWork, true);
+                } else {
+                    return null;
+                }
+            }
 
-    private boolean isWorkProfileAvailable() {
-        // Determine if the work profile is already available
-        // If so, return true and set all the corresponding flags to true
-        // This is for scenarios where the asynchronous part of the
-        // setup process might be finished before the synchronous part
-        Intent intent = new Intent(DummyActivity.TRY_START_SERVICE);
-        try {
-            // DO NOT sign this request, because this won't be actually sent to work profile
-            // If this is signed, and is the first request to be signed,
-            // then the other side would never receive the auth_key
-            Utility.transferIntentToProfileUnsigned(this, intent);
-            mStorage.setBoolean(LocalStorageManager.PREF_IS_SETTING_UP, false);
-            mStorage.setBoolean(LocalStorageManager.PREF_HAS_SETUP, true);
-            return true;
-        } catch (IllegalStateException e) {
-            // If any exception is thrown, this means that the profile is not available
-            return false;
-        }
+            @Override
+            public int getItemCount() {
+                return 2;
+            }
+        });
+        pager.setCurrentItem(curTabPos);
+        String[] pageTitles = new String[]{
+                getString(R.string.fragment_profile_main),
+                getString(R.string.fragment_profile_work)
+        };
+        new TabLayoutMediator(tabs, pager, (tab, position) ->
+                tab.setText(pageTitles[position])).attach();
+        tabs.getTabAt(curTabPos).select();
     }
 
     // Get the service on the other side
@@ -423,10 +391,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(settingsIntent);
                 return true;
             case R.id.main_menu_install_app_to_profile:
-                Intent openApkIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                openApkIntent.addCategory(Intent.CATEGORY_OPENABLE);
-                openApkIntent.setType("application/vnd.android.package-archive");
-                startActivityForResult(openApkIntent, REQUEST_DOCUMENTS_CHOOSE_APK);
+                mSelectApk.launch(null);
                 return true;
             case R.id.main_menu_set_sync_automatically:
                 Intent syncIntent = new Intent(BROADCAST_SET_SYNC_AUTOMATICALLY);
@@ -461,32 +426,30 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void onApkSelected(Uri uri) {
+        if (uri == null) return;
+        UriForwardProxy proxy = new UriForwardProxy(getApplicationContext(), uri);
+
+        try {
+            mServiceWork.installApk(proxy, new IAppInstallCallback.Stub() {
+                @Override
+                public void callback(int result) {
+                    runOnUiThread(() -> {
+                        // The other side will have closed the Fd for us
+                        if (result == RESULT_OK)
+                            Toast.makeText(MainActivity.this,
+                                    R.string.install_app_to_profile_success, Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+        } catch (RemoteException e) {
+            // Well, I don't know what to do then
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_PROVISION_PROFILE) {
-            if (resultCode == RESULT_OK) {
-                if (isWorkProfileAvailable()) {
-                    // For pre-Oreo, or post-Oreo on some circumstances,
-                    // by the time this is received, the whole process
-                    // should have completed.
-                    recreate();
-                    return;
-                }
-                // The sync part of the setup process is completed
-                // Wait for the provisioning to complete
-                mStorage.setBoolean(LocalStorageManager.PREF_IS_SETTING_UP, true);
-
-                // However, we still have to wait for DummyActivity in work profile to finish
-                mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setMessage(getString(R.string.provision_still_pending));
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.show();
-            } else {
-                Toast.makeText(this,
-                        getString(R.string.work_profile_provision_failed), Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else if (requestCode == REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE) {
+        if (requestCode == REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE) {
             if (resultCode == RESULT_OK) {
                 // RESULT_OK is from DummyActivity. The work profile is enabled!
                 bindWorkService();
@@ -506,69 +469,8 @@ public class MainActivity extends AppCompatActivity {
             registerStartActivityProxies();
             startKiller();
             buildView();
-        } else if (requestCode == REQUEST_SET_DEVICE_ADMIN) {
-            if (resultCode == RESULT_OK) {
-                // Device Admin is now set, go ahead to provisioning (or initialization)
-                init();
-            } else {
-                Toast.makeText(this, getString(R.string.device_admin_toast), Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else if (requestCode == REQUEST_DOCUMENTS_CHOOSE_APK && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            UriForwardProxy proxy = new UriForwardProxy(getApplicationContext(), uri);
-
-            try {
-                mServiceWork.installApk(proxy, new IAppInstallCallback.Stub() {
-                    @Override
-                    public void callback(int result) {
-                        runOnUiThread(() -> {
-                            // The other side will have closed the Fd for us
-                            if (result == RESULT_OK)
-                                Toast.makeText(MainActivity.this,
-                                        R.string.install_app_to_profile_success, Toast.LENGTH_LONG).show();
-                        });
-                    }
-                });
-            } catch (RemoteException e) {
-                // Well, I don't know what to do then
-            }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
-
-    private class AppListFragmentAdapter extends FragmentPagerAdapter {
-        AppListFragmentAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public int getCount() {
-            return 2;
-        }
-
-        @Override
-        public Fragment getItem(int i) {
-            if (i == 0) {
-                return AppListFragment.newInstance(mServiceMain, false);
-            } else if (i == 1) {
-                return AppListFragment.newInstance(mServiceWork, true);
-            } else {
-                return null;
-            }
-        }
-
-        @Nullable
-        @Override
-        public CharSequence getPageTitle(int i) {
-            if (i == 0) {
-                return getString(R.string.fragment_profile_main);
-            } else if (i == 1) {
-                return getString(R.string.fragment_profile_work);
-            } else {
-                return null;
-            }
         }
     }
 }
