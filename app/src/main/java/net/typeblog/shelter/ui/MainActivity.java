@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -49,9 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "Shelter";
 
-    private static final int REQUEST_START_SERVICE_IN_WORK_PROFILE = 2;
-    private static final int REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE = 4;
-
     private final ActivityResultLauncher<Void> mStartSetup =
             registerForActivityResult(new SetupWizardActivity.SetupWizardContract(), this::setupWizardCb);
     private final ActivityResultLauncher<Void> mResumeSetup =
@@ -62,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
                             new ActivityResultContracts.OpenDocument(),
                             new String[]{"application/vnd.android.package-archive"}),
                     this::onApkSelected);
+    // Logic of the following intents are quite complicated; use the generic contract for more control
+    private final ActivityResultLauncher<Intent> mTryStartWorkService =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::tryStartWorkServiceCb);
+    private final ActivityResultLauncher<Intent> mBindWorkService =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::bindWorkServiceCb);
 
     private LocalStorageManager mStorage = null;
 
@@ -157,7 +160,22 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-        startActivityForResult(intent, REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE);
+        mTryStartWorkService.launch(intent);
+    }
+
+    private void tryStartWorkServiceCb(ActivityResult result) {
+        if (result.getResultCode() == RESULT_OK) {
+            // RESULT_OK is from DummyActivity. The work profile is enabled!
+            bindWorkService();
+        } else {
+            // In this case, the user has been presented with a prompt
+            // to enable work mode, but we have no means to distinguish
+            // "ok" and "cancel", so the only way is to tell the user
+            // to start again.
+            Toast.makeText(this,
+                    getString(R.string.work_mode_disabled), Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
 
     private void bindWorkService() {
@@ -165,7 +183,18 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(DummyActivity.START_SERVICE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         Utility.transferIntentToProfile(this, intent);
-        startActivityForResult(intent, REQUEST_START_SERVICE_IN_WORK_PROFILE);
+        mBindWorkService.launch(intent);
+    }
+
+    private void bindWorkServiceCb(ActivityResult result) {
+        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+            Bundle extra = result.getData().getBundleExtra("extra");
+            IBinder binder = extra.getBinder("service");
+            mServiceWork = IShelterService.Stub.asInterface(binder);
+            registerStartActivityProxies();
+            startKiller();
+            buildView();
+        }
     }
 
     private void startKiller() {
@@ -211,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (position == 1) {
                     return AppListFragment.newInstance(mServiceWork, true);
                 } else {
-                    return null;
+                    throw new RuntimeException("How did this happen?");
                 }
             }
 
@@ -375,55 +404,63 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.main_menu_freeze_all:
-                // This is the same as clicking on the batch freeze shortcut
-                // so we just forward the request to DummyActivity
-                Intent intent = new Intent(DummyActivity.PUBLIC_FREEZE_ALL);
-                intent.setComponent(new ComponentName(this, DummyActivity.class));
-                startActivity(intent);
-                return true;
-            case R.id.main_menu_settings:
-                Intent settingsIntent = new Intent(this, SettingsActivity.class);
-                Bundle extras = new Bundle();
-                extras.putBinder("profile_service", mServiceWork.asBinder());
-                settingsIntent.putExtra("extras", extras);
-                startActivity(settingsIntent);
-                return true;
-            case R.id.main_menu_install_app_to_profile:
-                mSelectApk.launch(null);
-                return true;
-            case R.id.main_menu_set_sync_automatically:
-                Intent syncIntent = new Intent(BROADCAST_SET_SYNC_AUTOMATICALLY);
-                LocalBroadcastManager.getInstance(MainActivity.this)
-                        .sendBroadcast(syncIntent);
-                return true;
-            case R.id.main_menu_show_all:
-                Runnable update = () -> {
-                    mShowAll = !item.isChecked();
-                    item.setChecked(mShowAll);
-                    LocalBroadcastManager.getInstance(this)
-                            .sendBroadcast(new Intent(AppListFragment.BROADCAST_REFRESH));
-                };
+        int itemId = item.getItemId();
+        if (itemId == R.id.main_menu_freeze_all) {
+            // This is the same as clicking on the batch freeze shortcut
+            // so we just forward the request to DummyActivity
+            Intent intent = new Intent(DummyActivity.PUBLIC_FREEZE_ALL);
+            intent.setComponent(new ComponentName(this, DummyActivity.class));
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.main_menu_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            Bundle extras = new Bundle();
+            extras.putBinder("profile_service", mServiceWork.asBinder());
+            settingsIntent.putExtra("extras", extras);
+            startActivity(settingsIntent);
+            return true;
+        } else if (itemId == R.id.main_menu_create_freeze_all_shortcut) {
+            Intent launchIntent = new Intent(DummyActivity.PUBLIC_FREEZE_ALL);
+            launchIntent.setComponent(new ComponentName(this, DummyActivity.class));
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            Utility.createLauncherShortcut(this, launchIntent,
+                    Icon.createWithResource(this, R.mipmap.ic_freeze),
+                    "shelter-freeze-all", getString(R.string.freeze_all_shortcut));
+            return true;
+        } else if (itemId == R.id.main_menu_install_app_to_profile) {
+            mSelectApk.launch(null);
+            return true;
+        } else if (itemId == R.id.main_menu_set_sync_automatically) {
+            Intent syncIntent = new Intent(BROADCAST_SET_SYNC_AUTOMATICALLY);
+            LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(syncIntent);
+            return true;
+        } else if (itemId == R.id.main_menu_show_all) {
+            Runnable update = () -> {
+                mShowAll = !item.isChecked();
+                item.setChecked(mShowAll);
+                LocalBroadcastManager.getInstance(this)
+                        .sendBroadcast(new Intent(AppListFragment.BROADCAST_REFRESH));
+            };
 
-                if (!item.isChecked()) {
-                    new AlertDialog.Builder(this)
-                            .setMessage(R.string.show_all_warning)
-                            .setPositiveButton(R.string.first_run_alert_continue,
-                                    (dialog, which) -> update.run())
-                            .setNegativeButton(R.string.first_run_alert_cancel, null)
-                            .show();
-                } else {
-                    update.run();
-                }
-                return true;
-            case R.id.main_menu_documents_ui:
-                Intent documentsUiIntent = new Intent(Intent.ACTION_VIEW);
-                documentsUiIntent.setDataAndType(null, "vnd.android.document/root");
-                startActivity(documentsUiIntent);
-                return true;
+            if (!item.isChecked()) {
+                new AlertDialog.Builder(this)
+                        .setMessage(R.string.show_all_warning)
+                        .setPositiveButton(R.string.first_run_alert_continue,
+                                (dialog, which) -> update.run())
+                        .setNegativeButton(R.string.first_run_alert_cancel, null)
+                        .show();
+            } else {
+                update.run();
+            }
+            return true;
+        } else if (itemId == R.id.main_menu_documents_ui) {
+            Intent documentsUiIntent = new Intent(Intent.ACTION_VIEW);
+            documentsUiIntent.setDataAndType(null, "vnd.android.document/root");
+            startActivity(documentsUiIntent);
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
     private void onApkSelected(Uri uri) {
@@ -444,33 +481,6 @@ public class MainActivity extends AppCompatActivity {
             });
         } catch (RemoteException e) {
             // Well, I don't know what to do then
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == REQUEST_TRY_START_SERVICE_IN_WORK_PROFILE) {
-            if (resultCode == RESULT_OK) {
-                // RESULT_OK is from DummyActivity. The work profile is enabled!
-                bindWorkService();
-            } else {
-                // In this case, the user has been presented with a prompt
-                // to enable work mode, but we have no means to distinguish
-                // "ok" and "cancel", so the only way is to tell the user
-                // to start again.
-                Toast.makeText(this,
-                        getString(R.string.work_mode_disabled), Toast.LENGTH_LONG).show();
-                finish();
-            }
-        } else if (requestCode == REQUEST_START_SERVICE_IN_WORK_PROFILE && resultCode == RESULT_OK) {
-            Bundle extra = data.getBundleExtra("extra");
-            IBinder binder = extra.getBinder("service");
-            mServiceWork = IShelterService.Stub.asInterface(binder);
-            registerStartActivityProxies();
-            startKiller();
-            buildView();
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 }
