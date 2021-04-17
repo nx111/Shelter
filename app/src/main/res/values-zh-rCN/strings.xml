@@ -6,6 +6,23 @@
     <string name="device_admin_desc">App 隔离服务</string>
     <string name="device_admin_explanation">Shelter 需要成为设备管理员才能正常进行 App 隔离等操作。</string>
     <string name="camera_proxy_activity">选择图片文件</string>
+
+    <!-- Setup Wizard -->
+    <string name="setup_wizard_welcome">欢迎使用 Shelter</string>
+    <string name="setup_wizard_welcome_text">Shelter 可帮助你在隔离的配置中运行其它应用. 它通过使用Android的工作资料功能来实现.\n\n点击 \"下一步\", 我们将为您提供有关Shelter的更多信息, 并指导您完成设置过程.\n\n我们建议您仔细阅读以下所有页面.</string>
+    <string name="setup_wizard_permissions">权限描述</string>
+    <string name="setup_wizard_permissions_text">默认情况下, Shelter不会请求单独的权限. 只是在安装过程中, Shelter尝试建立工作资料，并因此成为该工作资料的管理员。\n\n这将授予Shelter在工作资料中的大量权限，与设备管理员的权限相当，尽管仅限于个人资料。作为Shelter大多数功能所必需的档案管理员。\n\n Shelter的某些高级功能可能需要外部工作档案的更多权限。在需要时，启用相应功能后，Shelter将分别询问这些权限。</string>
+    <string name="setup_wizard_compatibility">兼容性</string>
+    <string name="setup_wizard_compatibility_text">Shelter是在类似AOSP的Android衍生产品上开发和测试的。其中包括AOSP（Android开放源代码项目），Google Android（基于Pixels）和大多数基于AOSP的开源自定义ROM，例如LineageOS。如果您的手机运行的是上面列出的Android衍生产品之一，那么恭喜您！Shelter可能会在您的设备上正常工作。\n\n某些设备供应商在Android代码库中引入了非常激进的自定义设置，从而导致冲突，不兼容和意外行为。某些自定义ROM也可能会引入破坏兼容性的更改，但是与电话供应商引入的不兼容性相比，这些更改通常很少发生。\n\nSheler只是系统提供的工作资料功能的接口。如果系统提供的功能已损坏或不符合标准，则Shelter无法神奇地自行解决问题。如果您当前使用的是已知会破坏工作资料的供应商修改的Android版本，则已收到警示。无论如何，您都可以继续，但是不能保证Shelter在这种情况下的行为会正确。</string>
+    <string name="setup_wizard_ready">已准备好?</string>
+    <string name="setup_wizard_ready_text">现在可以为您配置Shelter了。请先确保您的设备没有处在“请勿打扰”模式下，因为稍后您需要单击通知以完成配置过程。\n\n准备好后，单击“下一步”开始配置.</string>
+    <string name="setup_wizard_please_wait">请稍候…</string>
+    <string name="setup_wizard_please_wait_text">正在尝试初始化工作资料并配置Shelter.</string>
+    <string name="setup_wizard_failed">配置失败</string>
+    <string name="setup_wizard_failed_text">很遗憾地通知您，我们无法为您配置Shelter。\n\n如果您没有手动取消配置，那么失败的原因通常是由于系统的重大修改或Shelter与其他工作资料管理器之间的冲突造成的。不幸的是，我们对此无能为力。\n\n点击“下一步”退出 .</string>
+    <string name="setup_wizard_action_required">请求操作</string>
+    <string name="setup_wizard_action_required_text">现在，您应该会看到来自Shelter的通知。请单击该通知以完成设置过程。\n\n如果看不到通知，请确保您的设备未处于“请勿打扰”模式，然后尝试拉下通知中心。\n\n要Shelter并重新开始，您可以在“设置”中清除Shelter的数据 .</string>
+
     <!-- Notifications -->
     <string name="notifications_important">Shelter 重要通知</string>
     <string name="finish_provision_title">点击这里完成 Shelter 初始化</string>
