@@ -320,7 +320,7 @@ public class Utility {
                         .build();
                 Intent addIntent = shortcutManager.createShortcutResultIntent(info);
                 shortcutManager.requestPinShortcut(info,
-                        PendingIntent.getBroadcast(context, 0, addIntent, 0).getIntentSender());
+                        PendingIntent.getBroadcast(context, 0, addIntent, PendingIntent.FLAG_IMMUTABLE).getIntentSender());
             } else {
                 // TODO: Maybe implement this for launchers without pin shortcut support?
                 // TODO: Should be the same with the fallback for Android < O
@@ -347,7 +347,7 @@ public class Utility {
             return -1;
         } else {
             cursor.moveToFirst();
-            return cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+            return cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
         }
     }
 
