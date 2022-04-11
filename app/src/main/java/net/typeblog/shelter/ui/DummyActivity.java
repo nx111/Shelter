@@ -364,15 +364,21 @@ public class DummyActivity extends AppCompatActivity {
         pi.registerSessionCallback(new InstallationProgressListener(this, pi, sessionId));
 
         PackageInstaller.Session session = pi.openSession(sessionId);
-       doInstallPackageQ(uri, split_apks, session, () -> {
+        doInstallPackageQ(uri, split_apks, session, () -> {
             // We have finished piping the streams, show the progress as 10%
             session.setStagingProgress(0.1f);
 
             // Commit the session
             Intent intent = new Intent(this, DummyActivity.class);
             intent.setAction(PACKAGEINSTALLER_CALLBACK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                    intent, PendingIntent.FLAG_MUTABLE);
+        PendingIntent pendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+            pendingIntent = PendingIntent.getActivity(this, 0,
+                intent, PendingIntent.FLAG_MUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
             session.commit(pendingIntent.getIntentSender());
         });
     }
@@ -431,8 +437,14 @@ public class DummyActivity extends AppCompatActivity {
         PackageInstaller pi = getPackageManager().getPackageInstaller();
         Intent intent = new Intent(this, DummyActivity.class);
         intent.setAction(PACKAGEINSTALLER_CALLBACK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+        PendingIntent pendingIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+            pendingIntent = PendingIntent.getActivity(this, 0,
                 intent, PendingIntent.FLAG_MUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
         pi.uninstall(getIntent().getStringExtra("package"), pendingIntent.getIntentSender());
     }
 
