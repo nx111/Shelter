@@ -463,7 +463,7 @@ public class ShelterService extends Service {
                     Log.e(LOG_TAG, "enable System App " + " failed (" + packageName + "), Exception thrown:" + e);
                 }
             }
-            editor.commit();
+            editor.apply();
         } else if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
             Log.v(LOG_TAG, "installGAppsCore: GApps Core install to Shelter failed,  not profile owner.");
         }
