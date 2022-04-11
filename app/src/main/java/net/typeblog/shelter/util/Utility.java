@@ -347,7 +347,9 @@ public class Utility {
             return -1;
         } else {
             cursor.moveToFirst();
-            return cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+            final int mediaStoreId = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+            cursor.close();
+            return mediaStoreId;
         }
     }
 
