@@ -19,6 +19,10 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.StrictMode;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,6 +31,8 @@ import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricPrompt;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.ShelterApplication;
@@ -94,6 +100,9 @@ public class DummyActivity extends AppCompatActivity {
 
     private static final int REQUEST_INSTALL_PACKAGE = 1;
     private static final int REQUEST_PERMISSION_EXTERNAL_STORAGE = 2;
+    private static final int REQUEST_PERMISSION_POST_NOTIFICATIONS = 3;
+
+    private static boolean sHasRequestedPermission = false;
 
     // A state variable to record the last time DummyActivity was informed that someone
     // in the same process needs to call an action without signature
@@ -136,8 +145,31 @@ public class DummyActivity extends AppCompatActivity {
             Utility.enforceWorkProfilePolicies(this);
             Utility.enforceUserRestrictions(this);
             SettingsManager.getInstance().applyAll();
+
+            synchronized (DummyActivity.class) {
+                // Do not show permission dialog during finalization -- it will conflict with the provisioning UI
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !sHasRequestedPermission
+                        && !FINALIZE_PROVISION.equals(getIntent().getAction())) {
+                    // Avoid requesting permission multiple times in one session
+                    // This also prevents multiple instances of DummyActivity from being blocked on each other
+                    sHasRequestedPermission = true;
+                    // We pretty much only send notifications to keep the process inside work profile alive
+                    // as such, only request the notification permission from inside the profile
+                    // This will ideally be shown and done when the user sees the app list UI for the first time
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_PERMISSION_POST_NOTIFICATIONS);
+                        // Continue once the request has been completed (see onRequestPermissionResult)
+                        return;
+                    }
+                }
+            }
         }
 
+        init();
+    }
+
+    private void init() {
         Intent intent = getIntent();
 
         // First check if we have a registered request from the same process
@@ -232,6 +264,11 @@ public class DummyActivity extends AppCompatActivity {
             } else {
                 finish();
             }
+        } else if (requestCode == REQUEST_PERMISSION_POST_NOTIFICATIONS) {
+            // Regardless of the result, continue initialization
+            // This is fine because most functionalities will work anyway; it will just be a bit buggy
+            // and unreliable.
+            init();
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
@@ -239,13 +276,19 @@ public class DummyActivity extends AppCompatActivity {
 
     private void actionFinalizeProvision() {
         if (mIsProfileOwner) {
-            // This is the action used by DeviceAdminReceiver to finalize the setup
-            // The work has been finished in onCreate(), now we just have to
-            // inform the main profile about this
-            Intent intent = new Intent(FINALIZE_PROVISION);
-            // We don't need signature for this intent
-            Utility.transferIntentToProfileUnsigned(this, intent);
-            startActivity(intent);
+            // Only notify the main profile on pre-Oreo
+            // After Oreo, since we use the activity-based finalization flow,
+            // the setup wizard will wait until we finish finalization before returning
+            // (Note: the actual finalization is done by common code in onCreate)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                // This is the action used by DeviceAdminReceiver to finalize the setup
+                // The work has been finished in onCreate(), now we just have to
+                // inform the main profile about this
+                Intent intent = new Intent(FINALIZE_PROVISION);
+                // We don't need signature for this intent
+                Utility.transferIntentToProfileUnsigned(this, intent);
+                startActivity(intent);
+            }
             finish();
         } else {
             // Set the flag telling MainActivity that we have now finished provisioning

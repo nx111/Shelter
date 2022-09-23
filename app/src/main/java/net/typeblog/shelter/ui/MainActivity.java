@@ -20,7 +20,6 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -29,8 +28,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import net.typeblog.shelter.R;
 import net.typeblog.shelter.ShelterApplication;
@@ -214,20 +212,8 @@ public class MainActivity extends AppCompatActivity {
         // Finally we can build the view
         // Find all the views
         ViewPager2 pager = findViewById(R.id.main_pager);
-        TabLayout tabs = findViewById(R.id.main_tablayout);
-        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                curTabPos = tab.getPosition();
-            }
 
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
-
-        });
+        BottomNavigationView nav = findViewById(R.id.main_bottom_navigation);
 
         // Initialize the ViewPager and the tab
         // All the remaining work will be done in the fragments
@@ -249,14 +235,28 @@ public class MainActivity extends AppCompatActivity {
                 return 2;
             }
         });
+        pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                int[] menuIds = new int[]{
+                        R.id.bottom_navigation_main,
+                        R.id.bottom_navigation_work
+                };
+                nav.setSelectedItemId(menuIds[position]);
+            }
+        });
+        nav.setOnItemSelectedListener((MenuItem item) -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.bottom_navigation_main) {
+                pager.setCurrentItem(0);
+                curTabPos = 0;
+            } else if (itemId == R.id.bottom_navigation_work) {
+                pager.setCurrentItem(1);
+                curTabPos = 1;
+            }
+            return true;
+        });
         pager.setCurrentItem(curTabPos);
-        String[] pageTitles = new String[]{
-                getString(R.string.fragment_profile_main),
-                getString(R.string.fragment_profile_work)
-        };
-        new TabLayoutMediator(tabs, pager, (tab, position) ->
-                tab.setText(pageTitles[position])).attach();
-        tabs.getTabAt(curTabPos).select();
     }
 
     // Get the service on the other side

@@ -6,6 +6,7 @@
 
     <uses-feature android:name="android.software.device_admin" android:required="true"/>
     <uses-feature android:name="android.software.managed_users" android:required="true"/>
+
     <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
 
     <permission android:name="android.permission.QUERY_ALL_PACKAGES" />
@@ -25,6 +26,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -92,6 +94,20 @@
                 <action android:name="net.typeblog.shelter.action.START_FILE_SHUTTLE_2" />
                 <action android:name="net.typeblog.shelter.action.SYNCHRONIZE_PREFERENCE" />
                 <action android:name="net.typeblog.shelter.action.PACKAGEINSTALLER_CALLBACK" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- An activity to listen to ACTION_PROVISIONING_SUCCESSFUL for finalization -->
+        <!-- This replaces the functionality of ShelterDeviceAdminReceiver on Oreo and above -->
+        <activity android:name=".ui.FinalizeActivity"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.AppCompat.Translucent.NoTitleBar"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.app.action.PROVISIONING_SUCCESSFUL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
