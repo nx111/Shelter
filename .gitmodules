@@ -1,4 +1,4 @@
 [submodule "libs/SetupWizardLibrary"]
 	path = libs/SetupWizardLibrary
-	url = https://gitea.angry.im/PeterCxy/SetupWizardLibrary.git
+	url = git@github.com:nx111/Shelter_SetupWizardLibrary.git
 	branch = android11-dev
