@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     // Show all applications or not
     // default to false
     boolean mShowAll = false;
+    boolean mSyncAutomatically = false;
 
     // current Tab position
     private int curTabPos = 1;
@@ -431,8 +432,12 @@ public class MainActivity extends AppCompatActivity {
             mSelectApk.launch(null);
             return true;
         } else if (itemId == R.id.main_menu_set_sync_automatically) {
+            mSyncAutomatically = !item.isChecked();
+            item.setChecked(mSyncAutomatically);
             Intent syncIntent = new Intent(BROADCAST_SET_SYNC_AUTOMATICALLY);
-            LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(syncIntent);
+            syncIntent.putExtra("enabled", mSyncAutomatically);
+            LocalBroadcastManager.getInstance(this)
+                    .sendBroadcast(syncIntent);
             return true;
         } else if (itemId == R.id.main_menu_show_all) {
             Runnable update = () -> {

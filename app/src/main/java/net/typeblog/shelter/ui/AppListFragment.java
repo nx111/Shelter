@@ -112,7 +112,8 @@ public class AppListFragment extends BaseFragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                mService.setSyncAutomatilly();
+                boolean enabled = intent.getBooleanExtra("enabled", false);
+                mService.setSyncAutomatilly(enabled);
             } catch (RemoteException e) { }
         }
     };

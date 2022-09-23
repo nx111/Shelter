@@ -284,15 +284,18 @@ public class ShelterService extends Service {
         }
 
         @Override
-        public void setSyncAutomatilly() {
+        public void setSyncAutomatilly(boolean enabled) {
             if (!mIsProfileOwner) {
                 //Log.d(LOG_TAG, "Please set sync automatilly by Settings -> Account on local system");
                 return;
             }
             boolean masterSyncAutomatically = ContentResolver.getMasterSyncAutomatically();
-            if (!masterSyncAutomatically) {
+            if (!masterSyncAutomatically && enabled) {
                 ContentResolver.setMasterSyncAutomatically(true);
                 masterSyncAutomatically = ContentResolver.getMasterSyncAutomatically();
+            } else if (masterSyncAutomatically && !enabled) {
+                ContentResolver.setMasterSyncAutomatically(false);
+                return;
             }
             if (!masterSyncAutomatically) {
                 Log.d(LOG_TAG, "setMasterSyncAutomatically failed!");
@@ -306,11 +309,11 @@ public class ShelterService extends Service {
                 for (Account account : accounts) {
                     ContentResolver.setIsSyncable(account, type.authority,  1);
                     ContentResolver.setSyncAutomatically(account, type.authority, true);
-                    boolean enabled = ContentResolver.getSyncAutomatically(account, type.authority);
-                    if (!enabled) {
+                    boolean mEnabled = ContentResolver.getSyncAutomatically(account, type.authority);
+                    if (!mEnabled) {
                         Log.d(LOG_TAG, "account: " + account.name + " not set to sync automatically.");
                     }
-                    if (enabled) {
+                    if (mEnabled) {
                         Log.d(LOG_TAG, "synching account: " + account.name);
                         // trigger update for next account
                         ContentResolver.requestSync(account, type.authority, new Bundle());
