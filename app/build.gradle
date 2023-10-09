@@ -19,8 +19,8 @@ android {
         applicationId "net.typeblog.shelter"
         minSdkVersion 24
         targetSdkVersion 34
-        versionCode 23
-        versionName "1.8-nx111"
+        versionCode 24
+        versionName "1.9-dev-nx111"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
