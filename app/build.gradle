@@ -37,9 +37,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-//    tasks.withType(JavaCompile) {
-//        options.compilerArgs << "-Xlint:unchecked"
-//    }
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked"
+    }
     lint {
         disable 'MissingTranslation', 'ExtraTranslation', 'GoogleAppIndexingWarning', 'InvalidFragmentVersionForActivityResult'
     }
@@ -51,6 +51,11 @@ android {
             }
         }
     }
+
+    buildFeatures {
+        aidl true
+    }
+    namespace 'net.typeblog.shelter'
 }
 
 dependencies {
