@@ -1,4 +1,10 @@
-1.8 (Unreleased)
+1.9 (Unreleased)
+==
+
+- Updated targetSDK to 34 (Android 14) with compatibility fixes.
+- More reliable delayed freezing using AlarmManager (thanks parmaster84).
+
+1.8
 ===
 
 - Updated targetSDK to 33 (Android 13) with compatibility fixes.
