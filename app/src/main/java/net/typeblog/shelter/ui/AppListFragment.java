@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -40,6 +41,7 @@ import net.typeblog.shelter.util.ApplicationInfoWrapper;
 import net.typeblog.shelter.util.LocalStorageManager;
 import net.typeblog.shelter.util.Utility;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +59,7 @@ public class AppListFragment extends BaseFragment {
     private static final int MENU_ITEM_CREATE_UNFREEZE_SHORTCUT = 10006;
     private static final int MENU_ITEM_AUTO_FREEZE = 10007;
     private static final int MENU_ITEM_ALLOW_CROSS_PROFILE_WIDGET = 10008;
+    private static final int MENU_ITEM_ALLOW_CROSS_PROFILE_INTERACTION = 10009;
 
     private IShelterService mService = null;
     private boolean mIsRemote = false;
@@ -67,6 +70,9 @@ public class AppListFragment extends BaseFragment {
     // Cache of allowed Cross-profile widget providers
     // Only useful if this fragment manages the work profile
     private Set<String> mCrossProfileWidgetProviders = new HashSet<>();
+
+    // Packages allowed to interact across profiles
+    private Set<String> mCrossProfilePackages = new HashSet<>();
 
     // Views
     private RecyclerView mList = null;
@@ -229,11 +235,13 @@ public class AppListFragment extends BaseFragment {
                 public void callback(List<ApplicationInfoWrapper> apps) {
                     if (mIsRemote) {
                         mCrossProfileWidgetProviders.clear();
+                        mCrossProfilePackages.clear();
 
-                        // Update the cross-profile widget provider list
+                        // Update the cross-profile packages / widget providers list
                         try {
                             mCrossProfileWidgetProviders.addAll(mService.getCrossProfileWidgetProviders());
-                        } catch (RemoteException e) {
+                            mCrossProfilePackages.addAll(mService.getCrossProfilePackages());
+                        } catch (RemoteException ignored) {
 
                         }
                     }
@@ -326,7 +334,7 @@ public class AppListFragment extends BaseFragment {
                     menu.add(Menu.NONE, MENU_ITEM_LAUNCH, Menu.NONE, R.string.launch);
                 menu.add(Menu.NONE, MENU_ITEM_FREEZE, Menu.NONE, R.string.freeze_app);
             }
-            // Cross-profile widget settings is also limited to work profile
+            // Cross-profile widget / packages settings is also limited to work profile
             MenuItem crossProfileWdiegt =
                     menu.add(Menu.NONE, MENU_ITEM_ALLOW_CROSS_PROFILE_WIDGET, Menu.NONE,
                             R.string.allow_cross_profile_widgets);
@@ -334,20 +342,28 @@ public class AppListFragment extends BaseFragment {
             crossProfileWdiegt.setChecked(
                     mCrossProfileWidgetProviders.contains(mSelectedApp.getPackageName()));
 
-            // Auto-freeze only works with launchable apps
-            if (canLaunch) {
-                // TODO: If we implement God Mode (i.e. Shelter as device owner), we should
-                // TODO: use two different lists to store auto freeze apps because we'll be
-                // TODO: able to freeze apps in main profile.
-                MenuItem autoFreeze = menu.add(Menu.NONE, MENU_ITEM_AUTO_FREEZE, Menu.NONE, R.string.auto_freeze);
-                autoFreeze.setCheckable(true);
-                autoFreeze.setChecked(
-                        LocalStorageManager.getInstance().stringListContains(
-                                LocalStorageManager.PREF_AUTO_FREEZE_LIST_WORK_PROFILE, mSelectedApp.getPackageName()));
-                menu.add(Menu.NONE, MENU_ITEM_CREATE_UNFREEZE_SHORTCUT, Menu.NONE, R.string.create_unfreeze_shortcut);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                MenuItem crossProfileInteraction =
+                        menu.add(Menu.NONE, MENU_ITEM_ALLOW_CROSS_PROFILE_INTERACTION, Menu.NONE,
+                                R.string.allow_cross_profile_interaction);
+                crossProfileInteraction.setCheckable(true);
+                crossProfileInteraction.setChecked(
+                        mCrossProfilePackages.contains(mSelectedApp.getPackageName()));
             }
-            if (!mSelectedApp.isSystem())
-                menu.add(Menu.NONE, MENU_ITEM_CLONE, Menu.NONE, R.string.clone_to_main_profile);
+ 
+          // Auto-freeze only works with launchable apps
+          if (canLaunch) {
+ 
+            // TODO: If we implement God Mode (i.e. Shelter as device owner), we should
+            // TODO: use two different lists to store auto freeze apps because we'll be
+            // TODO: able to freeze apps in main profile.
+            MenuItem autoFreeze = menu.add(Menu.NONE, MENU_ITEM_AUTO_FREEZE, Menu.NONE, R.string.auto_freeze);
+            autoFreeze.setCheckable(true);
+            autoFreeze.setChecked(
+                    LocalStorageManager.getInstance().stringListContains(
+                            LocalStorageManager.PREF_AUTO_FREEZE_LIST_WORK_PROFILE, mSelectedApp.getPackageName()));
+            menu.add(Menu.NONE, MENU_ITEM_CREATE_UNFREEZE_SHORTCUT, Menu.NONE, R.string.create_unfreeze_shortcut);
+          }
         } else {
             menu.add(Menu.NONE, MENU_ITEM_LAUNCH, Menu.NONE, R.string.launch);
             menu.add(Menu.NONE, MENU_ITEM_CLONE, Menu.NONE, R.string.clone_to_work_profile);
@@ -443,7 +459,7 @@ public class AppListFragment extends BaseFragment {
                             LocalStorageManager.PREF_AUTO_FREEZE_LIST_WORK_PROFILE, mSelectedApp.getPackageName());
                 }
                 return true;
-            case MENU_ITEM_ALLOW_CROSS_PROFILE_WIDGET:
+            case MENU_ITEM_ALLOW_CROSS_PROFILE_WIDGET: {
                 boolean newState = !item.isChecked();
                 try {
                     if (mService.setCrossProfileWidgetProviderEnabled(mSelectedApp.getPackageName(), newState)) {
@@ -460,6 +476,22 @@ public class AppListFragment extends BaseFragment {
 
                 }
                 return true;
+            }
+            case MENU_ITEM_ALLOW_CROSS_PROFILE_INTERACTION: {
+                boolean newState = !item.isChecked();
+                if (newState) {
+                    mCrossProfilePackages.add(mSelectedApp.getPackageName());
+                } else {
+                    mCrossProfilePackages.remove(mSelectedApp.getPackageName());
+                }
+                try {
+                    mService.setCrossProfilePackages(new ArrayList<>(mCrossProfilePackages));
+                    item.setChecked(newState);
+                } catch (RemoteException ignored) {
+
+                }
+                return true;
+            }
         }
 
         return super.onContextItemSelected(item);
