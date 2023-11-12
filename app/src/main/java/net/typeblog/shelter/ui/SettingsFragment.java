@@ -37,6 +37,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
     private static final String SETTINGS_AUTO_FREEZE_DELAY = "settings_auto_freeze_delay";
     private static final String SETTINGS_SKIP_FOREGROUND = "settings_dont_freeze_foreground";
     private static final String SETTINGS_FINGERPRINT_AUTH = "settings_fingerprint_auth_service";
+    private static final String SETTINGS_PAYMENT_STUB = "settings_payment_stub";
 
     private SettingsManager mManager = SettingsManager.getInstance();
     private IShelterService mServiceWork = null;
@@ -46,6 +47,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
     private CheckBoxPreference mPrefAutoFreezeService = null;
     private CheckBoxPreference mPrefSkipForeground = null;
     private CheckBoxPreference mPrefFingerprintAuth = null;
+    private CheckBoxPreference mPrefPaymentStub = null;
 
     private Preference mPrefAutoFreezeDelay = null;
 
@@ -81,6 +83,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         mPrefBlockContactsSearching = (CheckBoxPreference) findPreference(SETTINGS_BLOCK_CONTACTS_SEARCHING);
         mPrefBlockContactsSearching.setChecked(mManager.getBlockContactsSearchingEnabled());
         mPrefBlockContactsSearching.setOnPreferenceChangeListener(this);
+        mPrefPaymentStub = (CheckBoxPreference) findPreference(SETTINGS_PAYMENT_STUB);
+        mPrefPaymentStub.setChecked(mManager.getPaymentStubEnabled());
+        mPrefPaymentStub.setOnPreferenceChangeListener(this);
 
         // === Services ===
         mPrefAutoFreezeService = (CheckBoxPreference) findPreference(SETTINGS_AUTO_FREEZE_SERVICE);
@@ -225,6 +230,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
                 mManager.setFingerprintAuthEnabled((boolean) newState);
             else
                 mManager.setFingerprintAuthEnabled(false);
+            return true;
+        } else if (preference == mPrefPaymentStub) {
+            mManager.setPaymentStubEnabled((boolean) newState);
             return true;
         } else {
             return false;
