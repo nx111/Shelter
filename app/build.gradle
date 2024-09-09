@@ -8,11 +8,8 @@ def dateString() {
 
 repositories {
     //noinspection JcenterRepositoryObsolete
-    jcenter {
-        content {
-            includeVersion "mobi.upod", "time-duration-picker", "1.1.3"
-        }
-    }
+    jcenter()
+    maven { url 'https://artifactory.krista.ru/artifactory/maven-public/'}
 }
 
 android {
