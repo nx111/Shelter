@@ -126,4 +126,6 @@
 \n如果您没有看到通知，请确保您的设备未处于“请勿打扰”模式并尝试下拉通知中心。
 \n
 \n要重置 Shelter 并重新开始，您可以在设置中清除 Shelter 的数据。</string>
+    <string name="settings_payment_stub">支付服务</string>
+    <string name="settings_payment_stub_desc">在主配置文件中启用仿造的 NFC 支付服务，这样“设置 - NFC”下的“非接触式支付”选项就会启用，允许您在工作配置文件中选择支付应用。这可以解决 Android 的一个错误，如果主配置文件中没有可用的支付应用，则无法在工作配置文件中选择支付应用。</string>
 </resources>
