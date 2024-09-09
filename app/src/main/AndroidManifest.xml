@@ -8,7 +8,7 @@
 
     <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
 
-    <permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="ReservedSystemPermission"/>
 
     <!--<uses-permission android:name="android.permission.INTERACT_ACROSS_USERS"/>-->
 
