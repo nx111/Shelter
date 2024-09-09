@@ -39,6 +39,9 @@
 \n您將在完成設定後收到一則通知，請確定您的裝置 <b>不在</b> 勿擾模式中。</string>
     <string name="settings_cross_profile_file_chooser_desc">打開以後，您將可以且僅可以從系統的 Documents UI (啓動器上的名稱爲 文件 或 下載) 或支持 Documents UI 的 APP 中 瀏覽 / 查看 / 選擇 / 複製 Shelter 內的文件到主用戶，反之亦然。這不會影響對文件系統的隔離。即使是支持 Documents UI 的 App 也只能臨時獲取您選擇的文件的訪問權限。</string>
     <string name="settings_dont_freeze_foreground_desc">在您鎖屏的時候，不要凍結前臺應用 (鎖屏時仍有可見窗口的應用)。這主要用於音樂播放器等 App，但您將需要在使用完成後手動使用 \"批量凍結\" 快捷方式凍結它們。</string>
+    <string name="settings_fingerprint_auth_service">指紋認證</string>
+    <string name="settings_fingerprint_auth_service_desc">解凍運行時驗證你的指紋</string>
+    <string name="fingerprint_auth_negative">放棄</string>
     <string name="work_mode_disabled">工作模式 (Work Mode) 已被您關閉，請開啓後再啓動 Shelter。</string>
     <string name="shortcut_create_success">快捷方式已創建。</string>
     <string name="request_usage_stats">Shelter 需要 <b>使用情況數據</b> 來做這件事。請在按 \"確定\" 後出現的窗口中，對 <b>兩個</b> Shelter都打開此權限。如果沒有全部打開，該功能將無法正確運作。</string>

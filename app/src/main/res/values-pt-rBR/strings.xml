@@ -88,7 +88,7 @@
     <string name="setup_wizard_welcome">Bem-vindo ao Shelter</string>
     <string name="setup_wizard_permissions">Detalhes sobre as permissões</string>
     <string name="setup_wizard_compatibility">Compatibilidade</string>
-    <string name="setup_wizard_ready_text">Vamos configurar o Shelter para você. Se o seu dispositivo estiver rodando Android 7 ou inferior, por favor, certifique-se primeiro de que seu dispositivo <b>não</b> esteja no modo \"Não Perturbe\", porque mais tarde você precisará <b>clicar em uma notificação</b> para finalizar o processo de configuração.
+    <string name="setup_wizard_ready_text">Vamos configurar o Shelter para você. Se o seu dispositivo estiver rodando Android 7 ou superior, por favor, certifique-se primeiro de que seu dispositivo <b>não</b> esteja no modo \"Não Perturbe\", porque mais tarde você precisará <b>clicar em uma notificação</b> para finalizar o processo de configuração.
 \n
 \nQuando estiver pronto, clique em \"Próximo\" para iniciar o processo de configuração.</string>
     <string name="setup_wizard_please_wait">Por favor, aguarde…</string>
@@ -101,7 +101,7 @@
 \n
 \nClique no \"Próximo\" para sair.</string>
     <string name="setup_wizard_action_required">Ação necessária</string>
-    <string name="setup_wizard_ready">Pronto\?</string>
+    <string name="setup_wizard_ready">Pronto?</string>
     <string name="setup_wizard_please_wait_text">Estamos tentando criar o Perfil de Trabalho e configurar o Shelter no seu dispositivo.</string>
     <string name="setup_wizard_welcome_text">O Shelter é um app que ajuda a executar outros apps em um perfil isolado. Para isto ele usa o recurso de <b>Perfil de Trabalho</b> no Android.
 \n
@@ -123,4 +123,15 @@
 \nSe você não vê a notificação, certifique-se de que seu dispositivo não está no modo \"Não Perturbe\" e tente recuperar ela da área de notificações deslizando de cima para baixo.
 \n
 \nPara reiniciar o Shelter e começar de novo, você pode limpar os dados em Configurações do app.</string>
+    <string name="payment_stub_description"></string>
+    <string name="settings_payment_stub_desc"></string>
+    <string name="settings_patreon_url" translatable="false"></string>
+    <string name="allow_cross_profile_interaction"></string>
+    <string name="settings_translate_url" translatable="false"></string>
+    <string name="settings_bug_report_url" translatable="false"></string>
+    <string name="device_admin_label" translatable="false"></string>
+    <string name="settings_payment_stub"></string>
+    <string name="app_name" translatable="false"></string>
+    <string name="settings_source_code_url" translatable="false"></string>
+    <string name="settings_patreon" translatable="false"></string>
 </resources>

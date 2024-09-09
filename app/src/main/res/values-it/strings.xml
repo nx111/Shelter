@@ -108,7 +108,7 @@
     <string name="setup_wizard_welcome">Benvenuti in Shelter</string>
     <string name="setup_wizard_permissions">Una parola in merito alle autorizzazioni</string>
     <string name="setup_wizard_compatibility">Compatibilità</string>
-    <string name="setup_wizard_ready">Iniziamo\?</string>
+    <string name="setup_wizard_ready">Iniziamo?</string>
     <string name="setup_wizard_please_wait">Attendere prego…</string>
     <string name="setup_wizard_please_wait_text">Stiamo provando a inizializzare il Profilo di Lavoro e configurare Shelter sul tuo dispositivo.</string>
     <string name="setup_wizard_welcome_text">Shelter è un\'app che ti permette di usare altre applicazioni in un profilo isolato. Tutto questo viene fatto sfruttando la funzione <b>Profilo di Lavoro</b> di Android.
@@ -121,4 +121,15 @@
 \nCiò darà a Shelter numerose autorizzazioni all\'interno del profilo, comparabili a quelle di un admin di dispositivo, ma pur sempre confinate nel profilo. Essere l\'amministratore del profilo è necessario perché Shelter funzioni correttamente.
 \n
 \nAlcune funzioni avanzate di Shelter potrebbero richiedere più autorizzazioni <b>fuori</b> dal Profilo di Lavoro. Se necessarie, Shelter le richiederà separatamente quando attivi le funzioni corrispondenti.</string>
+    <string name="payment_stub_description"></string>
+    <string name="settings_payment_stub_desc"></string>
+    <string name="settings_patreon_url" translatable="false"></string>
+    <string name="allow_cross_profile_interaction"></string>
+    <string name="settings_translate_url" translatable="false"></string>
+    <string name="settings_bug_report_url" translatable="false"></string>
+    <string name="device_admin_label" translatable="false"></string>
+    <string name="settings_payment_stub"></string>
+    <string name="app_name" translatable="false"></string>
+    <string name="settings_source_code_url" translatable="false"></string>
+    <string name="settings_patreon" translatable="false"></string>
 </resources>

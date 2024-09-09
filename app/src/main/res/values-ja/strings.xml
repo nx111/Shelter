@@ -97,7 +97,7 @@
     <string name="setup_wizard_action_required">操作が必要です</string>
     <string name="setup_wizard_welcome">Shelterへようこそ</string>
     <string name="settings_dont_freeze_foreground_desc">画面をロックしたときに、フォアグラウンドのアプリ（アクティビティが表示されているもの）を凍結しない。これは音楽プレーヤーなどのアプリには便利ですが、その後「バッチフリーズ・ショートカット」を使って手動で凍結する必要があります。</string>
-    <string name="setup_wizard_ready_text">これで、Shelterの設定が完了しました。セットアッププロセスを完了させるには、後で<b>通知をタップ</b>する必要があるため、まずお使いのデバイスが<b>サイレントモードになっていない</b>ことを確認してください。
+    <string name="setup_wizard_ready_text">これで、Shelterの設定が完了しました。Android 7以下の端末の場合、セットアッププロセスを完了させるには、後で<b>通知をタップ</b>する必要があるため、まずお使いのデバイスが<b>サイレントモードになっていない</b>ことを確認してください。
 \n
 \n準備ができたら、「次へ」をタップして、セットアッププロセスを開始します。</string>
     <string name="setup_wizard_permissions">権限についてひとこと</string>
@@ -123,4 +123,15 @@
 \nそうでなければ、あなたが途中でセットアップをキャンセルしたわけではない場合、失敗の原因は、システムが大きく変更されているか、Shelterと他の仕事用プロファイルマネージャーとの間で競合が発生していることがほとんどです。残念ながら、これに対してできることはあまりありません。
 \n
 \nNext \"をタップして終了します。</string>
+    <string name="payment_stub_description"></string>
+    <string name="settings_payment_stub_desc"></string>
+    <string name="settings_patreon_url" translatable="false"></string>
+    <string name="allow_cross_profile_interaction"></string>
+    <string name="settings_translate_url" translatable="false"></string>
+    <string name="settings_bug_report_url" translatable="false"></string>
+    <string name="device_admin_label" translatable="false"></string>
+    <string name="settings_payment_stub"></string>
+    <string name="app_name" translatable="false"></string>
+    <string name="settings_source_code_url" translatable="false"></string>
+    <string name="settings_patreon" translatable="false"></string>
 </resources>

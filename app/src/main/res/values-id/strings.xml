@@ -26,7 +26,7 @@
     <string name="install_app_to_profile_success">Penginstalan aplikasi selesai di profil kerja.</string>
     <string name="show_all">Lihat Semua Aplikasi</string>
     <string name="setup_wizard_compatibility">Kesesuaian</string>
-    <string name="setup_wizard_ready">Siap\?</string>
+    <string name="setup_wizard_ready">Siap?</string>
     <string name="setup_wizard_please_wait">Silakan tunggu. . .</string>
     <string name="setup_wizard_please_wait_text">Kami mencoba menginisialisasi Work Profile dan menyiapkan Shelter di perangkat Anda.</string>
     <string name="setup_wizard_failed">Penyiapan gagal</string>
@@ -112,4 +112,15 @@
     <string name="request_storage_manager">Shelter memerlukan akses ke <b>Semua File</b> untuk File Shuttle. Harap aktifkan izin untuk <b>KESELURUHAN </b> (Pribadi / Kantor) aplikasi Shelter yang ditampilkan dalam dialog setelah Anda menekan \"Ok\".</string>
     <string name="request_system_alert">Shelter harus <b>Draw over Other Apps</b> agar File Shuttle berfungsi dengan benar. Harap aktifkan izin untuk <b>KESELURUHAN </b> (Pribadi / Kantor) aplikasi Shelter yang ditampilkan dalam dialog setelah Anda menekan \"Ok\". Izin ini digunakan untuk memulai layanan File Shuttle di latar belakang.</string>
     <string name="miui_cannot_clone">Mengkloning aplikasi non-sistem ke profil lain saat ini tidak dimungkinkan di MIUI. Harap gandakan toko aplikasi sistem Anda (mis. <b>Play Store</b>) ke profil lain, lalu instal aplikasi dari sana.</string>
+    <string name="payment_stub_description">Rintisan Layanan Pembayaran (JANGAN GUNAKAN)</string>
+    <string name="settings_payment_stub">Rintisan Layanan Pembayaran</string>
+    <string name="settings_payment_stub_desc">Aktifkan layanan pembayaran NFC palsu di profil utama, sehingga opsi pembayaran nirsentuh di bawah Pengaturan - NFC diaktifkan untuk memungkinkan Anda memilih aplikasi pembayaran di dalam profil kerja. Ini mengatasi bug Android yang membuat aplikasi pembayaran di dalam profil kerja tidak dapat dipilih jika tidak ada yang tersedia di profil utama.</string>
+    <string name="allow_cross_profile_interaction">Izinkan Interaksi Lintas Profil</string>
+    <string name="settings_patreon_url" translatable="false"></string>
+    <string name="settings_translate_url" translatable="false"></string>
+    <string name="settings_bug_report_url" translatable="false"></string>
+    <string name="device_admin_label" translatable="false"></string>
+    <string name="app_name" translatable="false"></string>
+    <string name="settings_source_code_url" translatable="false"></string>
+    <string name="settings_patreon" translatable="false"></string>
 </resources>
