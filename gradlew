@@ -177,8 +177,8 @@ if ! echo "$@" | grep -q  "build" ; then
    exit  $ret
 fi
 if [ -f app/build/outputs/apk/release/app-release-unsigned.apk -a -f sign-tools/signapk.jar -a -f sign-tools/x509.pem -a -f sign-tools/key.pk8 ]; then
-    versionCode=$(date +%Y%m%d)
-    versionName=$(grep "[[:space:]]*versionName[[:space:]]*\".*\"" app/build.gradle  | sed -e "s/^[[:space:]]*versionName[[:space:]]*//g" | sed -e "s/\"//g")
+    versionCode=$(git rev-list --first-parent --count master)
+    versionName=$(git describe --tags --dirty)
     apkname=$(basename $(pwd))
     unsignedApk=app/build/outputs/apk/release/app-release-unsigned.apk
     signedApk=app/build/outputs/apk/release/${apkname}-${versionName}_${versionCode}-signed.apk

@@ -72,14 +72,6 @@ android {
         disable 'MissingTranslation', 'ExtraTranslation', 'GoogleAppIndexingWarning', 'InvalidFragmentVersionForActivityResult'
     }
 
-    android {
-        applicationVariants.all { variant ->
-            variant.outputs.each { output ->
-                output.versionCodeOverride = dateString()
-            }
-        }
-    }
-
     buildFeatures {
         aidl true
     }
