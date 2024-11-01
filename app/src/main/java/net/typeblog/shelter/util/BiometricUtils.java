@@ -7,7 +7,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.core.app.ActivityCompat;
-import androidx.core.hardware.fingerprint.FingerprintManagerCompat;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
 
 public class BiometricUtils {
 
@@ -19,16 +20,16 @@ public class BiometricUtils {
 
     /* Condition 1: Check if the device has fingerprint sensors. */
     public static boolean isHardwareSupported(Context context) {
-        FingerprintManagerCompat fingerprintManager = FingerprintManagerCompat.from(context);
-        return fingerprintManager.isHardwareDetected();
+      	BiometricManager biometricManager = BiometricManager.from(context);
+        return biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE;
     }
 
     /* Condition 2: Fingerprint authentication can be matched with a
      * registered fingerprint of the user. So we need to perform this check
      * in order to enable fingerprint authentication*/
     public static boolean isFingerprintAvailable(Context context) {
-        FingerprintManagerCompat fingerprintManager = FingerprintManagerCompat.from(context);
-        return fingerprintManager.hasEnrolledFingerprints();
+      	BiometricManager biometricManager = BiometricManager.from(context);
+        return biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS;
     }
 
     /* Condition 3: Check if the permission has been added to
